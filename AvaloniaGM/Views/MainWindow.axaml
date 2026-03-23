@@ -28,6 +28,12 @@
 
         <DataTemplate x:Key="EditorTabContentTemplate"
                       x:DataType="vm:EditorTabViewModel">
+            <ContentControl Content="{Binding EditorContent}" />
+        </DataTemplate>
+    </Window.Resources>
+
+    <Window.DataTemplates>
+        <DataTemplate DataType="vm:ResourceSummaryEditorViewModel">
             <Grid RowDefinitions="Auto,Auto,*"
                   Margin="16">
                 <TextBlock Text="{Binding Header}"
@@ -45,13 +51,17 @@
                         BorderBrush="#FFC6C6C6"
                         BorderThickness="1"
                         Background="#FFFAFAFA">
-                    <TextBlock Text="{Binding PlaceholderContent}"
+                    <TextBlock Text="{Binding Content}"
                                TextWrapping="Wrap"
                                LineHeight="24" />
                 </Border>
             </Grid>
         </DataTemplate>
-    </Window.Resources>
+
+        <DataTemplate DataType="vm:SpriteEditorViewModel">
+            <controls:SpriteEditorView />
+        </DataTemplate>
+    </Window.DataTemplates>
 
     <Window.Styles>
         <Style Selector="Button.toolbar-button">

@@ -149,25 +149,24 @@ namespace AvaloniaGM.ViewModels
             var replacementTab = SelectedTab is not null && SelectedTab.CanBeReplaced
                 ? SelectedTab
                 : null;
+            var editorContent = BuildEditorContent(treeItem.Kind, treeItem.Resource);
 
             if (replacementTab is not null)
             {
                 replacementTab.ReplaceWith(
                     treeItem.Name,
-                    GetResourceSubtitle(treeItem.Kind),
-                    BuildResourceSummary(treeItem.Kind, treeItem.Resource),
                     treeItem.Kind,
-                    treeItem.ResourceKey);
+                    treeItem.ResourceKey,
+                    editorContent);
                 SelectedTab = replacementTab;
             }
             else
             {
                 var resourceTab = EditorTabViewModel.CreateResourceTab(
                     treeItem.Name,
-                    GetResourceSubtitle(treeItem.Kind),
-                    BuildResourceSummary(treeItem.Kind, treeItem.Resource),
                     treeItem.Kind,
-                    treeItem.ResourceKey);
+                    treeItem.ResourceKey,
+                    editorContent);
 
                 OpenTabs.Add(resourceTab);
                 SelectedTab = resourceTab;
@@ -424,6 +423,41 @@ namespace AvaloniaGM.ViewModels
             foreach (var child in item.Children)
             {
                 CaptureExpandedState(child, expandedState);
+            }
+        }
+
+        private object BuildEditorContent(ProjectResourceKind kind, Resource resource)
+        {
+            return kind switch
+            {
+                ProjectResourceKind.Sprite when resource is Sprite sprite
+                    => new SpriteEditorViewModel(sprite, RefreshResourceVisuals, AppendOutput),
+                _ => new ResourceSummaryEditorViewModel(
+                    resource.Name,
+                    GetResourceSubtitle(kind),
+                    BuildResourceSummary(kind, resource))
+            };
+        }
+
+        public void RefreshResourceVisuals(Resource resource)
+        {
+            foreach (var root in ResourceTree)
+            {
+                RefreshResourceVisuals(root, resource);
+            }
+        }
+
+        private static void RefreshResourceVisuals(ResourceTreeItemViewModel item, Resource resource)
+        {
+            if (ReferenceEquals(item.Resource, resource)
+                || item.Resource is GameObject gameObject && ReferenceEquals(gameObject.Sprite, resource))
+            {
+                item.NotifyIconChanged();
+            }
+
+            foreach (var child in item.Children)
+            {
+                RefreshResourceVisuals(child, resource);
             }
         }
 
@@ -1165,6 +1199,11 @@ namespace AvaloniaGM.ViewModels
             TreePathKey = BuildTreePathKey(parent, kind, sourceNode, resource, name);
         }
 
+        public void NotifyIconChanged()
+        {
+            OnPropertyChanged(nameof(TreeIconSource));
+        }
+
         internal static string BuildResourceKey(ProjectResourceKind kind, Resource? resource, string fallbackName)
         {
             var identity = resource switch
@@ -1219,10 +1258,7 @@ namespace AvaloniaGM.ViewModels
         private string header;
 
         [ObservableProperty]
-        private string subtitle;
-
-        [ObservableProperty]
-        private string placeholderContent;
+        private object? editorContent;
 
         [ObservableProperty]
         private ProjectResourceKind resourceKind;
@@ -1232,16 +1268,15 @@ namespace AvaloniaGM.ViewModels
 
         public bool CanBeReplaced { get; private set; }
 
-        public EditorTabViewModel(string header, string subtitle, string placeholderContent)
-            : this(header, subtitle, placeholderContent, ProjectResourceKind.Unknown, null, canBeReplaced: false)
+        public EditorTabViewModel(string header, object? editorContent)
+            : this(header, editorContent, ProjectResourceKind.Unknown, null, canBeReplaced: false)
         {
         }
 
-        public EditorTabViewModel(string header, string subtitle, string placeholderContent, ProjectResourceKind resourceKind, string? resourceKey, bool canBeReplaced)
+        public EditorTabViewModel(string header, object? editorContent, ProjectResourceKind resourceKind, string? resourceKey, bool canBeReplaced)
         {
             this.header = header;
-            this.subtitle = subtitle;
-            this.placeholderContent = placeholderContent;
+            this.editorContent = editorContent;
             this.resourceKind = resourceKind;
             this.resourceKey = resourceKey;
             CanBeReplaced = canBeReplaced;
@@ -1253,19 +1288,18 @@ namespace AvaloniaGM.ViewModels
                 && string.Equals(ResourceKey, resourceKey, StringComparison.OrdinalIgnoreCase);
         }
 
-        public void ReplaceWith(string header, string subtitle, string placeholderContent, ProjectResourceKind resourceKind, string? resourceKey)
+        public void ReplaceWith(string header, ProjectResourceKind resourceKind, string? resourceKey, object? editorContent)
         {
             Header = header;
-            Subtitle = subtitle;
-            PlaceholderContent = placeholderContent;
+            EditorContent = editorContent;
             ResourceKind = resourceKind;
             ResourceKey = resourceKey;
             CanBeReplaced = true;
         }
 
-        public static EditorTabViewModel CreateResourceTab(string header, string subtitle, string placeholderContent, ProjectResourceKind resourceKind, string? resourceKey)
+        public static EditorTabViewModel CreateResourceTab(string header, ProjectResourceKind resourceKind, string? resourceKey, object? editorContent)
         {
-            return new EditorTabViewModel(header, subtitle, placeholderContent, resourceKind, resourceKey, canBeReplaced: true);
+            return new EditorTabViewModel(header, editorContent, resourceKind, resourceKey, canBeReplaced: true);
         }
     }
 }
