@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:AvaloniaGM.ViewModels"
+        xmlns:controls="using:AvaloniaGM.Views.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
@@ -19,13 +20,6 @@
     </Design.DataContext>
 
     <Window.Resources>
-        <TreeDataTemplate x:Key="ResourceTreeTemplate"
-                          x:DataType="vm:ResourceTreeItemViewModel"
-                          ItemsSource="{Binding Children}">
-            <TextBlock Text="{Binding Name}"
-                       DoubleTapped="ResourceTreeItem_OnDoubleTapped" />
-        </TreeDataTemplate>
-
         <DataTemplate x:Key="EditorTabHeaderTemplate"
                       x:DataType="vm:EditorTabViewModel">
             <TextBlock Text="{Binding Header}" />
@@ -129,10 +123,18 @@
                                    FontWeight="SemiBold" />
                     </Border>
 
-                    <TreeView Grid.Row="1"
-                              Margin="6"
-                              ItemsSource="{Binding ResourceTree}"
-                              ItemTemplate="{StaticResource ResourceTreeTemplate}" />
+                    <ScrollViewer Grid.Row="1"
+                                  Margin="6"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding ResourceTree}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ResourceTreeItemViewModel">
+                                    <controls:ResourceTreeItemView />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </Grid>
             </Border>
 

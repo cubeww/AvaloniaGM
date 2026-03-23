@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AvaloniaGM.ViewModels"
+             xmlns:controls="using:AvaloniaGM.Views.Controls"
+             x:Class="AvaloniaGM.Views.Controls.ResourceTreeItemView"
+             x:DataType="vm:ResourceTreeItemViewModel"
+             HorizontalAlignment="Stretch">
+
+    <StackPanel Spacing="0"
+                HorizontalAlignment="Stretch">
+        <Border Background="{Binding RowBackground}"
+                BorderBrush="{Binding RowBorderBrush}"
+                BorderThickness="0,0,0,1"
+                CornerRadius="4"
+                Padding="2,1"
+                HorizontalAlignment="Stretch"
+                PointerPressed="RowBorder_OnPointerPressed"
+                DoubleTapped="RowBorder_OnDoubleTapped">
+            <Border.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="{Binding CreateOrInsertMenuHeader}"
+                              IsEnabled="{Binding CanCreateResource}"
+                              Tag="{Binding}"
+                              Click="CreateOrInsertResourceMenuItem_OnClick" />
+                    <MenuItem Header="{Binding CreateOrInsertFolderMenuHeader}"
+                              IsEnabled="{Binding CanCreateFolder}"
+                              Tag="{Binding}"
+                              Click="CreateOrInsertFolderMenuItem_OnClick" />
+                    <Separator />
+                    <MenuItem Header="{Binding DeleteMenuHeader}"
+                              IsEnabled="{Binding CanDelete}"
+                              Tag="{Binding}"
+                              Click="DeleteMenuItem_OnClick" />
+                </ContextMenu>
+            </Border.ContextMenu>
+
+            <Grid ColumnDefinitions="18,*"
+                  HorizontalAlignment="Stretch">
+                <Button Grid.Column="0"
+                        Width="18"
+                        Height="18"
+                        Padding="0"
+                        BorderThickness="0"
+                        Background="Transparent"
+                        Foreground="#FF444444"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        IsVisible="{Binding HasChildren}"
+                        Click="ExpandCollapseButton_OnClick">
+                    <TextBlock Text="{Binding ExpandGlyph}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Button>
+
+                <TextBlock Grid.Column="1"
+                           Text="{Binding Name}"
+                           Foreground="{Binding RowForeground}"
+                           FontWeight="{Binding RowFontWeight}"
+                           VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <ItemsControl Margin="16,0,0,0"
+                      IsVisible="{Binding ShowChildren}"
+                      ItemsSource="{Binding Children}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:ResourceTreeItemViewModel">
+                    <controls:ResourceTreeItemView />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

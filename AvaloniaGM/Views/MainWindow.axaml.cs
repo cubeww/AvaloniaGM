@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using AvaloniaGM.Services;
@@ -49,17 +48,6 @@ namespace AvaloniaGM.Views
         private async void SaveProjectAsMenuItem_OnClick(object? sender, RoutedEventArgs e)
         {
             await SaveProjectAsAsync();
-        }
-
-        private void ResourceTreeItem_OnDoubleTapped(object? sender, TappedEventArgs e)
-        {
-            if (sender is not Control { DataContext: ResourceTreeItemViewModel treeItem })
-            {
-                return;
-            }
-
-            ViewModel?.OpenResourceTab(treeItem);
-            e.Handled = true;
         }
 
         private async Task OpenProjectAsync()
