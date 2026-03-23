@@ -62,31 +62,49 @@ namespace AvaloniaGM.Views
             {
                 var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
                 {
-                    Title = "打开 GameMaker 项目",
+                    Title = "Open GameMaker Project",
                     AllowMultiple = false,
                     FileTypeFilter = [GameMakerProjectFileType]
                 });
 
                 if (files.Count == 0)
                 {
-                    vm.AppendOutput("已取消打开项目。");
+                    vm.AppendOutput("Open project canceled.");
                     return;
                 }
 
                 var projectPath = TryGetLocalPath(files[0]);
                 if (string.IsNullOrWhiteSpace(projectPath))
                 {
-                    vm.AppendOutput("无法读取所选项目路径。");
+                    vm.AppendOutput("Unable to read the selected project path.");
                     return;
                 }
 
-                var project = _projectSerializer.DeserializeProject(projectPath);
-                vm.LoadProject(project, projectPath);
+                OpenProjectFromPath(projectPath);
             }
             catch (Exception ex)
             {
-                vm.AppendOutput($"打开项目失败：{ex.Message}");
+                vm.AppendOutput($"Failed to open project: {ex.Message}");
             }
+        }
+
+        public void OpenProjectFromPath(string projectPath)
+        {
+            var vm = ViewModel;
+            if (vm is null)
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(projectPath))
+            {
+                vm.AppendOutput("Unable to read the project path.");
+                return;
+            }
+
+            var normalizedPath = Path.GetFullPath(projectPath);
+            var project = _projectSerializer.DeserializeProject(normalizedPath);
+            vm.LoadProject(project, normalizedPath);
         }
 
         private async Task SaveProjectAsync()
@@ -113,7 +131,7 @@ namespace AvaloniaGM.Views
             }
             catch (Exception ex)
             {
-                vm.AppendOutput($"保存项目失败：{ex.Message}");
+                vm.AppendOutput($"Failed to save project: {ex.Message}");
             }
         }
 
@@ -130,7 +148,7 @@ namespace AvaloniaGM.Views
                 var suggestedFileName = GetSuggestedProjectFileName(vm);
                 var storageFile = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
                 {
-                    Title = "另存为 GameMaker 项目",
+                    Title = "Save GameMaker Project As",
                     SuggestedFileName = suggestedFileName,
                     ShowOverwritePrompt = true,
                     FileTypeChoices = [GameMakerProjectFileType]
@@ -138,14 +156,14 @@ namespace AvaloniaGM.Views
 
                 if (storageFile is null)
                 {
-                    vm.AppendOutput("已取消另存为项目。");
+                    vm.AppendOutput("Save As canceled.");
                     return;
                 }
 
                 var projectPath = TryGetLocalPath(storageFile);
                 if (string.IsNullOrWhiteSpace(projectPath))
                 {
-                    vm.AppendOutput("无法读取另存为目标路径。");
+                    vm.AppendOutput("Unable to read the Save As target path.");
                     return;
                 }
 
@@ -157,7 +175,7 @@ namespace AvaloniaGM.Views
             }
             catch (Exception ex)
             {
-                vm.AppendOutput($"另存为项目失败：{ex.Message}");
+                vm.AppendOutput($"Failed to save project as: {ex.Message}");
             }
         }
 

@@ -1,5 +1,6 @@
-﻿using Avalonia;
 using System;
+using Avalonia;
+using Avalonia.Svg.Skia;
 
 namespace AvaloniaGM
 {
@@ -15,6 +16,7 @@ namespace AvaloniaGM
         // Avalonia configuration, don't remove; also used by visual designer.
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
+                .AfterSetup(_ => GC.KeepAlive(typeof(SvgImageExtension).Assembly))
                 .UsePlatformDetect()
                 .WithInterFont()
                 .LogToTrace();

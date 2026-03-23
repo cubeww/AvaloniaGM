@@ -34,7 +34,7 @@
                 </ContextMenu>
             </Border.ContextMenu>
 
-            <Grid ColumnDefinitions="18,*"
+            <Grid ColumnDefinitions="18,18,*"
                   HorizontalAlignment="Stretch">
                 <Button Grid.Column="0"
                         Width="18"
@@ -46,13 +46,29 @@
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         IsVisible="{Binding HasChildren}"
+                        DoubleTapped="ExpandCollapseButton_OnDoubleTapped"
                         Click="ExpandCollapseButton_OnClick">
                     <TextBlock Text="{Binding ExpandGlyph}"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center" />
                 </Button>
 
-                <TextBlock Grid.Column="1"
+                <Border Grid.Column="1"
+                        Width="16"
+                        Height="16"
+                        Margin="0,1,4,1"
+                        BorderBrush="#FFD6D6D6"
+                        BorderThickness="1"
+                        Background="#00FFFFFF"
+                        CornerRadius="2"
+                        VerticalAlignment="Center">
+                    <Image Source="{Binding TreeIconSource}"
+                           Stretch="Uniform"
+                           HorizontalAlignment="Stretch"
+                           VerticalAlignment="Stretch" />
+                </Border>
+
+                <TextBlock Grid.Column="2"
                            Text="{Binding Name}"
                            Foreground="{Binding RowForeground}"
                            FontWeight="{Binding RowFontWeight}"

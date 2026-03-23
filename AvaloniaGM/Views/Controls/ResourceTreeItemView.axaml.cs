@@ -1,6 +1,8 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.VisualTree;
 using AvaloniaGM.ViewModels;
 
 namespace AvaloniaGM.Views.Controls
@@ -24,12 +26,22 @@ namespace AvaloniaGM.Views.Controls
                 return;
             }
 
+            if (IsFromExpandCollapseButton(e.Source))
+            {
+                return;
+            }
+
             MainViewModel.SelectTreeItem(TreeItem);
         }
 
         private void RowBorder_OnDoubleTapped(object? sender, TappedEventArgs e)
         {
             if (TreeItem is null || MainViewModel is null)
+            {
+                return;
+            }
+
+            if (IsFromExpandCollapseButton(e.Source))
             {
                 return;
             }
@@ -55,7 +67,13 @@ namespace AvaloniaGM.Views.Controls
                 return;
             }
 
+            MainViewModel.SelectTreeItem(TreeItem);
             MainViewModel.ToggleTreeItemExpansion(TreeItem);
+            e.Handled = true;
+        }
+
+        private void ExpandCollapseButton_OnDoubleTapped(object? sender, TappedEventArgs e)
+        {
             e.Handled = true;
         }
 
@@ -90,6 +108,17 @@ namespace AvaloniaGM.Views.Controls
 
             MainViewModel?.DeleteTreeItem(treeItem);
             e.Handled = true;
+        }
+
+        private static bool IsFromExpandCollapseButton(object? source)
+        {
+            if (source is Button)
+            {
+                return true;
+            }
+
+            return source is Visual visual
+                && visual.FindAncestorOfType<Button>() is not null;
         }
     }
 }

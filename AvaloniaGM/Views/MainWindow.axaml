@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:AvaloniaGM.ViewModels"
         xmlns:controls="using:AvaloniaGM.Views.Controls"
+        xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Svg.Controls.Skia.Avalonia"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
@@ -52,6 +53,27 @@
         </DataTemplate>
     </Window.Resources>
 
+    <Window.Styles>
+        <Style Selector="Button.toolbar-button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+
+        <Style Selector="Button.toolbar-button:pointerover">
+            <Setter Property="Background" Value="#FFF0F4FA" />
+            <Setter Property="BorderBrush" Value="#FFD5DFEC" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <Style Selector="Button.toolbar-button:pressed">
+            <Setter Property="Background" Value="#FFE3EBF6" />
+            <Setter Property="BorderBrush" Value="#FFC5D3E4" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+    </Window.Styles>
+
     <Grid RowDefinitions="Auto,Auto,*">
         <Menu Grid.Row="0"
               Background="#FFE7E7E7">
@@ -87,22 +109,55 @@
                 BorderThickness="0,1,0,1"
                 Background="#FFEDEDED">
             <StackPanel Orientation="Horizontal"
-                        Margin="8,6">
-                <Button MinWidth="96"
-                        Margin="0,0,8,0"
-                        Command="{Binding NewProjectCommand}">
-                    新建项目
+                        Margin="4,4">
+                <Button Width="32"
+                        Height="32"
+                        Margin="0,0,0,0"
+                        Command="{Binding NewProjectCommand}"
+                        Classes="toolbar-button"
+                        ToolTip.Tip="New Project">
+                    <Panel>
+                        <Image Width="16"
+                               Height="16"
+                               Stretch="Uniform">
+                            <Image.Source>
+                                <svg:SvgImage Source="/Assets/Icons/Fluent/Toolbar/new-project.svg" />
+                            </Image.Source>
+                        </Image>
+                    </Panel>
                 </Button>
 
-                <Button MinWidth="96"
-                        Margin="0,0,8,0"
-                        Click="OpenProjectButton_OnClick">
-                    打开项目
+                <Button Width="32"
+                        Height="32"
+                        Margin="0,0,0,0"
+                        Click="OpenProjectButton_OnClick"
+                        Classes="toolbar-button"
+                        ToolTip.Tip="Open Project">
+                    <Panel>
+                        <Image Width="16"
+                               Height="16"
+                               Stretch="Uniform">
+                            <Image.Source>
+                                <svg:SvgImage Source="/Assets/Icons/Fluent/Toolbar/open-project.svg" />
+                            </Image.Source>
+                        </Image>
+                    </Panel>
                 </Button>
 
-                <Button MinWidth="96"
-                        Click="SaveProjectButton_OnClick">
-                    保存项目
+                <Button Width="32"
+                        Height="32"
+                        Click="SaveProjectButton_OnClick"
+                        Classes="toolbar-button"
+                        ToolTip.Tip="Save Project">
+                    <Panel>
+                        <Image Width="16"
+                               Height="16"
+                               Stretch="Uniform">
+                            <Image.Source>
+                                <svg:SvgImage Source="/Assets/Icons/Fluent/Toolbar/save-project.svg" />
+                            </Image.Source>
+                        </Image>
+                    </Panel>
                 </Button>
             </StackPanel>
         </Border>
@@ -119,7 +174,7 @@
                             BorderBrush="#FFD0D0D0"
                             BorderThickness="0,0,0,1"
                             Background="#FFF0F0F0">
-                        <TextBlock Text="资源树"
+                        <TextBlock Text="Resource Tree"
                                    FontWeight="SemiBold" />
                     </Border>
 
@@ -169,7 +224,7 @@
                                 BorderBrush="#FFD0D0D0"
                                 BorderThickness="0,1,0,1"
                                 Background="#FFF0F0F0">
-                            <TextBlock Text="输出"
+                            <TextBlock Text="Output"
                                        FontWeight="SemiBold" />
                         </Border>
 

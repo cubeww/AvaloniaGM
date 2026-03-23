@@ -6,7 +6,9 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using AvaloniaGM.Models;
+using AvaloniaGM.Services;
 
 namespace AvaloniaGM.ViewModels
 {
@@ -34,7 +36,7 @@ namespace AvaloniaGM.ViewModels
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(WindowTitle))]
-        private string projectName = "未命名项目";
+        private string projectName = "Untitled Project";
 
         [ObservableProperty]
         private EditorTabViewModel? selectedTab;
@@ -49,7 +51,7 @@ namespace AvaloniaGM.ViewModels
         [ObservableProperty]
         private Project? currentProject;
 
-        public string WindowTitle => $"AvaloniaGM - {ProjectName}";
+        public string WindowTitle => $"{ProjectName} - AvaloniaGM";
 
         public MainWindowViewModel()
         {
@@ -68,13 +70,13 @@ namespace AvaloniaGM.ViewModels
         [RelayCommand]
         private void RunProject()
         {
-            AppendOutput("运行项目按钮已触发，编译与运行流程待实现。");
+            AppendOutput("Run Project triggered. Build and launch workflow is not implemented yet.");
         }
 
         [RelayCommand]
         private void ShowHelp()
         {
-            AppendOutput("帮助菜单已触发，关于窗口与文档入口待实现。");
+            AppendOutput("Help triggered. About dialog and documentation entry are not implemented yet.");
         }
 
         public Project EnsureCurrentProject()
@@ -105,7 +107,7 @@ namespace AvaloniaGM.ViewModels
             RebuildResourceTree(project, preserveExpandedState: false);
             RebuildOpenTabs(project);
 
-            AppendOutput($"项目已打开：{fullPath}");
+            AppendOutput($"Project opened: {fullPath}");
         }
 
         public void MarkProjectSaved(string projectFilePath, bool savedAs)
@@ -124,8 +126,8 @@ namespace AvaloniaGM.ViewModels
             RebuildOpenTabs(project);
 
             AppendOutput(savedAs
-                ? $"项目已另存为：{fullPath}"
-                : $"项目已保存：{fullPath}");
+                ? $"Project saved as: {fullPath}"
+                : $"Project saved: {fullPath}");
         }
 
         public void OpenResourceTab(ResourceTreeItemViewModel treeItem)
@@ -171,7 +173,7 @@ namespace AvaloniaGM.ViewModels
                 SelectedTab = resourceTab;
             }
 
-            AppendOutput($"已打开资源标签页：{treeItem.Name}");
+            AppendOutput($"Opened resource tab: {treeItem.Name}");
         }
 
         public void SelectTreeItem(ResourceTreeItemViewModel treeItem)
@@ -242,7 +244,7 @@ namespace AvaloniaGM.ViewModels
                 OpenResourceTab(createdTreeItem);
             }
 
-            AppendOutput($"{(targetItem.IsFolder ? "已创建" : "已插入")}资源：{resource.Name}");
+            AppendOutput($"{(targetItem.IsFolder ? "Created" : "Inserted")} resource: {resource.Name}");
         }
 
         public void CreateOrInsertFolder(ResourceTreeItemViewModel targetItem)
@@ -287,7 +289,7 @@ namespace AvaloniaGM.ViewModels
                 SelectTreeItem(createdFolderItem);
             }
 
-            AppendOutput($"{(targetItem.IsFolder ? "已创建" : "已插入")}文件夹：{folderName}");
+            AppendOutput($"{(targetItem.IsFolder ? "Created" : "Inserted")} folder: {folderName}");
         }
 
         public void DeleteTreeItem(ResourceTreeItemViewModel targetItem)
@@ -325,7 +327,7 @@ namespace AvaloniaGM.ViewModels
                 }
             }
 
-            AppendOutput($"{(targetItem.IsFolder ? "已删除文件夹" : "已删除资源")}：{targetItem.Name}");
+            AppendOutput($"{(targetItem.IsFolder ? "Deleted folder" : "Deleted resource")}: {targetItem.Name}");
         }
 
         public void AppendOutput(string message)
@@ -340,7 +342,7 @@ namespace AvaloniaGM.ViewModels
         {
             var project = new Project
             {
-                Name = "未命名项目",
+                Name = "Untitled Project",
             };
             EnsureProjectResourceRoots(project);
             _selectedTreeItemKey = null;
@@ -354,7 +356,7 @@ namespace AvaloniaGM.ViewModels
 
             if (writeLog)
             {
-                AppendOutput("已创建空项目。");
+                AppendOutput("Created an empty project.");
             }
         }
 
@@ -429,19 +431,19 @@ namespace AvaloniaGM.ViewModels
         {
             return kind switch
             {
-                ProjectResourceKind.Sprite => "Sprite 资源",
-                ProjectResourceKind.Sound => "Sound 资源",
-                ProjectResourceKind.Background => "Background 资源",
-                ProjectResourceKind.Path => "Path 资源",
-                ProjectResourceKind.Script => "Script 资源",
-                ProjectResourceKind.Shader => "Shader 资源",
-                ProjectResourceKind.Font => "Font 资源",
-                ProjectResourceKind.Object => "Object 资源",
-                ProjectResourceKind.Timeline => "Timeline 资源",
-                ProjectResourceKind.Room => "Room 资源",
-                ProjectResourceKind.DataFile => "Datafile 资源",
-                ProjectResourceKind.Extension => "Extension 资源",
-                _ => "资源"
+                ProjectResourceKind.Sprite => "Sprite Resource",
+                ProjectResourceKind.Sound => "Sound Resource",
+                ProjectResourceKind.Background => "Background Resource",
+                ProjectResourceKind.Path => "Path Resource",
+                ProjectResourceKind.Script => "Script Resource",
+                ProjectResourceKind.Shader => "Shader Resource",
+                ProjectResourceKind.Font => "Font Resource",
+                ProjectResourceKind.Object => "Object Resource",
+                ProjectResourceKind.Timeline => "Timeline Resource",
+                ProjectResourceKind.Room => "Room Resource",
+                ProjectResourceKind.DataFile => "Data File Resource",
+                ProjectResourceKind.Extension => "Extension Resource",
+                _ => "Resource"
             };
         }
 
@@ -451,94 +453,94 @@ namespace AvaloniaGM.ViewModels
             {
                 ProjectResourceKind.Sprite when resource is Sprite sprite => string.Join(Environment.NewLine,
                 [
-                    $"名称：{sprite.Name}",
-                    $"帧数：{sprite.Frames.Count}",
-                    $"尺寸：{sprite.Width} x {sprite.Height}",
-                    $"原点：({sprite.XOrigin}, {sprite.YOrigin})",
-                    "这里后续可以接入 Sprite 预览与属性编辑。"
+                    $"Name: {sprite.Name}",
+                    $"Frames: {sprite.Frames.Count}",
+                    $"Size: {sprite.Width} x {sprite.Height}",
+                    $"Origin: ({sprite.XOrigin}, {sprite.YOrigin})",
+                    "Sprite preview and property editing can be added here later."
                 ]),
                 ProjectResourceKind.Sound when resource is Sound sound => string.Join(Environment.NewLine,
                 [
-                    $"名称：{sound.Name}",
-                    $"扩展名：{sound.Extension}",
-                    $"音频组：{sound.AudioGroup}",
-                    $"预加载：{(sound.Preload ? "是" : "否")}",
-                    "这里后续可以接入 Sound 参数编辑与试听。"
+                    $"Name: {sound.Name}",
+                    $"Extension: {sound.Extension}",
+                    $"Audio Group: {sound.AudioGroup}",
+                    $"Preload: {(sound.Preload ? "Yes" : "No")}",
+                    "Sound parameter editing and preview playback can be added here later."
                 ]),
                 ProjectResourceKind.Background when resource is Background background => string.Join(Environment.NewLine,
                 [
-                    $"名称：{background.Name}",
-                    $"尺寸：{background.Width} x {background.Height}",
-                    $"Tileset：{(background.IsTileset ? "是" : "否")}",
-                    "这里后续可以接入 Background 预览与属性编辑。"
+                    $"Name: {background.Name}",
+                    $"Size: {background.Width} x {background.Height}",
+                    $"Tileset: {(background.IsTileset ? "Yes" : "No")}",
+                    "Background preview and property editing can be added here later."
                 ]),
                 ProjectResourceKind.Path when resource is GamePath path => string.Join(Environment.NewLine,
                 [
-                    $"名称：{path.Name}",
-                    $"点数量：{path.Points.Count}",
-                    $"闭合：{(path.Closed ? "是" : "否")}",
-                    "这里后续可以接入路径编辑器。"
+                    $"Name: {path.Name}",
+                    $"Point Count: {path.Points.Count}",
+                    $"Closed: {(path.Closed ? "Yes" : "No")}",
+                    "A path editor can be added here later."
                 ]),
                 ProjectResourceKind.Script when resource is Script script => string.Join(Environment.NewLine,
                 [
-                    $"名称：{script.Name}",
-                    $"代码长度：{script.SourceCode.Length} 字符",
-                    "这里后续可以接入脚本代码编辑器。"
+                    $"Name: {script.Name}",
+                    $"Code Length: {script.SourceCode.Length} characters",
+                    "A script code editor can be added here later."
                 ]),
                 ProjectResourceKind.Shader when resource is Shader shader => string.Join(Environment.NewLine,
                 [
-                    $"名称：{shader.Name}",
-                    $"项目类型：{shader.ProjectType}",
-                    $"Vertex 长度：{shader.VertexSource.Length} 字符",
-                    $"Fragment 长度：{shader.FragmentSource.Length} 字符",
-                    "这里后续可以接入 Shader 编辑器。"
+                    $"Name: {shader.Name}",
+                    $"Project Type: {shader.ProjectType}",
+                    $"Vertex Length: {shader.VertexSource.Length} characters",
+                    $"Fragment Length: {shader.FragmentSource.Length} characters",
+                    "A shader editor can be added here later."
                 ]),
                 ProjectResourceKind.Font when resource is Font font => string.Join(Environment.NewLine,
                 [
-                    $"名称：{font.Name}",
-                    $"字体：{font.FontName}",
-                    $"字号：{font.Size}",
-                    $"字形数：{font.Glyphs.Count}",
-                    "这里后续可以接入 Font 预览与属性编辑。"
+                    $"Name: {font.Name}",
+                    $"Font: {font.FontName}",
+                    $"Size: {font.Size}",
+                    $"Glyph Count: {font.Glyphs.Count}",
+                    "Font preview and property editing can be added here later."
                 ]),
                 ProjectResourceKind.Object when resource is GameObject gameObject => string.Join(Environment.NewLine,
                 [
-                    $"名称：{gameObject.Name}",
-                    $"事件数：{gameObject.Events.Count}",
-                    $"可见：{(gameObject.Visible ? "是" : "否")}",
-                    $"持久：{(gameObject.Persistent ? "是" : "否")}",
-                    "这里后续可以接入 Object 事件编辑器。"
+                    $"Name: {gameObject.Name}",
+                    $"Event Count: {gameObject.Events.Count}",
+                    $"Visible: {(gameObject.Visible ? "Yes" : "No")}",
+                    $"Persistent: {(gameObject.Persistent ? "Yes" : "No")}",
+                    "An object event editor can be added here later."
                 ]),
                 ProjectResourceKind.Timeline when resource is Timeline timeline => string.Join(Environment.NewLine,
                 [
-                    $"名称：{timeline.Name}",
-                    $"Moment 数量：{timeline.Moments.Count}",
-                    "这里后续可以接入 Timeline 编辑器。"
+                    $"Name: {timeline.Name}",
+                    $"Moment Count: {timeline.Moments.Count}",
+                    "A timeline editor can be added here later."
                 ]),
                 ProjectResourceKind.Room when resource is Room room => string.Join(Environment.NewLine,
                 [
-                    $"名称：{room.Name}",
-                    $"尺寸：{room.Width} x {room.Height}",
-                    $"实例数：{room.Instances.Count}",
-                    $"Tile 数：{room.Tiles.Count}",
-                    "这里后续可以接入 Room 编辑器。"
+                    $"Name: {room.Name}",
+                    $"Size: {room.Width} x {room.Height}",
+                    $"Instance Count: {room.Instances.Count}",
+                    $"Tile Count: {room.Tiles.Count}",
+                    "A room editor can be added here later."
                 ]),
                 ProjectResourceKind.DataFile when resource is DataFile dataFile => string.Join(Environment.NewLine,
                 [
-                    $"名称：{dataFile.Name}",
-                    $"文件名：{dataFile.FileName}",
-                    $"大小：{(dataFile.Size == 0 && dataFile.RawData is not null ? dataFile.RawData.Length : dataFile.Size)} 字节",
-                    "这里后续可以接入 Datafile 属性编辑。"
+                    $"Name: {dataFile.Name}",
+                    $"File Name: {dataFile.FileName}",
+                    $"Size: {(dataFile.Size == 0 && dataFile.RawData is not null ? dataFile.RawData.Length : dataFile.Size)} bytes",
+                    "Data file property editing can be added here later."
                 ]),
                 ProjectResourceKind.Extension when resource is Extension extension => string.Join(Environment.NewLine,
                 [
-                    $"名称：{extension.Name}",
-                    $"作者：{extension.Author}",
-                    $"包含文件：{extension.Includes.Count}",
-                    $"包文件：{extension.PackageFiles.Count}",
-                    "这里后续可以接入 Extension 编辑器。"
+                    $"Name: {extension.Name}",
+                    $"Author: {extension.Author}",
+                    $"Include Files: {extension.Includes.Count}",
+                    $"Package Files: {extension.PackageFiles.Count}",
+                    "An extension editor can be added here later."
                 ]),
-                _ => $"名称：{resource.Name}{Environment.NewLine}这里后续可以接入对应资源编辑器。"
+                _ => $"Name: {resource.Name}{Environment.NewLine}A dedicated resource editor can be added here later."
             };
         }
 
@@ -1077,6 +1079,7 @@ namespace AvaloniaGM.ViewModels
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(ShowChildren))]
         [NotifyPropertyChangedFor(nameof(ExpandGlyph))]
+        [NotifyPropertyChangedFor(nameof(TreeIconSource))]
         private bool isExpanded;
 
         [ObservableProperty]
@@ -1104,6 +1107,23 @@ namespace AvaloniaGM.ViewModels
         public bool ShowChildren => HasChildren && IsExpanded;
 
         public string ExpandGlyph => IsExpanded ? "▾" : "▸";
+
+        public IImage TreeIconSource => Resource switch
+        {
+            Sprite sprite => sprite.Frames
+                .OrderBy(static frame => frame.Index)
+                .Select(static frame => frame.Bitmap)
+                .FirstOrDefault(static bitmap => bitmap is not null)
+                ?? AppIconCatalog.GetTreeIcon(Kind, isFolder: false, isExpanded: false),
+            Background background => background.Bitmap
+                ?? AppIconCatalog.GetTreeIcon(Kind, isFolder: false, isExpanded: false),
+            GameObject gameObject => gameObject.Sprite?.Frames
+                .OrderBy(static frame => frame.Index)
+                .Select(static frame => frame.Bitmap)
+                .FirstOrDefault(static bitmap => bitmap is not null)
+                ?? AppIconCatalog.GetTreeIcon(Kind, isFolder: false, isExpanded: false),
+            _ => AppIconCatalog.GetTreeIcon(Kind, IsFolder, IsExpanded),
+        };
 
         public IBrush RowBackground => IsSelected ? SelectedRowBackgroundBrush : TransparentBrush;
 
