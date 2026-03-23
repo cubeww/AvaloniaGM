@@ -153,6 +153,18 @@ public partial class ProjectGmxSerializer
                 File.WriteAllBytes(includedResourcePath, includedResource.RawData);
             }
 
+            foreach (var packageFile in extension.PackageFiles)
+            {
+                if (packageFile.RawData is null || string.IsNullOrWhiteSpace(packageFile.RelativePath))
+                {
+                    continue;
+                }
+
+                var packageFilePath = GetExtensionPackageOutputPath(projectDirectory, extension.Name, packageFile.RelativePath);
+                Directory.CreateDirectory(Path.GetDirectoryName(packageFilePath)!);
+                File.WriteAllBytes(packageFilePath, packageFile.RawData);
+            }
+
             foreach (var include in extension.Includes)
             {
                 if (include.RawData is not null && !string.IsNullOrWhiteSpace(include.FileName))

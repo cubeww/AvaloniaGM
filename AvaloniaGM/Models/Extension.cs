@@ -40,12 +40,21 @@ public class Extension : Resource
 
     public List<ExtensionIncludedResource> IncludedResources { get; } = [];
 
+    public List<ExtensionPackageFile> PackageFiles { get; } = [];
+
     public List<ExtensionInclude> Includes { get; } = [];
 }
 
 public class ExtensionIncludedResource
 {
     public string FilePath { get; set; } = string.Empty;
+
+    public byte[]? RawData { get; set; }
+}
+
+public class ExtensionPackageFile
+{
+    public string RelativePath { get; set; } = string.Empty;
 
     public byte[]? RawData { get; set; }
 }

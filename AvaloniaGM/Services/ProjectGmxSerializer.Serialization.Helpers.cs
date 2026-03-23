@@ -114,6 +114,11 @@ public partial class ProjectGmxSerializer
         return Path.Combine(projectDirectory, "extensions", extensionName, NormalizeProjectPath(fileName));
     }
 
+    private static string GetExtensionPackageOutputPath(string projectDirectory, string extensionName, string relativePath)
+    {
+        return Path.Combine(projectDirectory, "extensions", extensionName, NormalizeProjectPath(relativePath));
+    }
+
     private static XElement BuildExtensionProxyFilesElement(IEnumerable<ExtensionProxyFile> proxyFiles)
     {
         var root = new XElement("ProxyFiles");

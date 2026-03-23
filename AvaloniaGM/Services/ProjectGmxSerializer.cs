@@ -303,6 +303,8 @@ public partial class ProjectGmxSerializer
             }
         }
 
+        ReadExtensionPackageFiles(fullPath, extension);
+
         return extension;
     }
 
@@ -1468,6 +1470,57 @@ public partial class ProjectGmxSerializer
             {
                 FilePath = filePath,
                 RawData = ReadExtensionIncludedResourceData(extensionGmxPath, filePath),
+            });
+        }
+    }
+
+    private static void ReadExtensionPackageFiles(string extensionGmxPath, Extension extension)
+    {
+        extension.PackageFiles.Clear();
+
+        var extensionDirectory = Path.GetDirectoryName(extensionGmxPath);
+        if (string.IsNullOrWhiteSpace(extensionDirectory))
+        {
+            return;
+        }
+
+        var extensionName = GetResourceNameFromPath(extensionGmxPath, ".extension.gmx");
+        var packageDirectory = Path.Combine(extensionDirectory, extensionName);
+        if (!Directory.Exists(packageDirectory))
+        {
+            return;
+        }
+
+        var representedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var include in extension.Includes)
+        {
+            if (!string.IsNullOrWhiteSpace(include.FileName))
+            {
+                representedPaths.Add(NormalizeProjectPath(include.FileName));
+            }
+
+            foreach (var proxyFile in include.ProxyFiles)
+            {
+                if (!string.IsNullOrWhiteSpace(proxyFile.Name))
+                {
+                    representedPaths.Add(NormalizeProjectPath(proxyFile.Name));
+                }
+            }
+        }
+
+        foreach (var filePath in Directory.EnumerateFiles(packageDirectory, "*", SearchOption.AllDirectories)
+            .OrderBy(static path => path, StringComparer.OrdinalIgnoreCase))
+        {
+            var relativePath = NormalizeProjectPath(Path.GetRelativePath(packageDirectory, filePath));
+            if (representedPaths.Contains(relativePath))
+            {
+                continue;
+            }
+
+            extension.PackageFiles.Add(new ExtensionPackageFile
+            {
+                RelativePath = relativePath,
+                RawData = File.ReadAllBytes(filePath),
             });
         }
     }
