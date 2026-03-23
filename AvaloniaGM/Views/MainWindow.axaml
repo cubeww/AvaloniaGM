@@ -3,18 +3,185 @@
         xmlns:vm="using:AvaloniaGM.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d"
         x:Class="AvaloniaGM.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
+        Width="1400"
+        Height="900"
+        MinWidth="960"
+        MinHeight="640"
         Icon="/Assets/avalonia-logo.ico"
-        Title="AvaloniaGM">
+        Title="{Binding WindowTitle}"
+        Background="#FFF3F3F3">
 
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
+        <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <Window.Resources>
+        <TreeDataTemplate x:Key="ResourceTreeTemplate"
+                          x:DataType="vm:ResourceTreeItemViewModel"
+                          ItemsSource="{Binding Children}">
+            <TextBlock Text="{Binding Name}"
+                       DoubleTapped="ResourceTreeItem_OnDoubleTapped" />
+        </TreeDataTemplate>
 
+        <DataTemplate x:Key="EditorTabHeaderTemplate"
+                      x:DataType="vm:EditorTabViewModel">
+            <TextBlock Text="{Binding Header}" />
+        </DataTemplate>
+
+        <DataTemplate x:Key="EditorTabContentTemplate"
+                      x:DataType="vm:EditorTabViewModel">
+            <Grid RowDefinitions="Auto,Auto,*"
+                  Margin="16">
+                <TextBlock Text="{Binding Header}"
+                           FontSize="18"
+                           FontWeight="SemiBold" />
+
+                <TextBlock Grid.Row="1"
+                           Margin="0,8,0,0"
+                           Text="{Binding Subtitle}"
+                           Foreground="#FF555555" />
+
+                <Border Grid.Row="2"
+                        Margin="0,16,0,0"
+                        Padding="16"
+                        BorderBrush="#FFC6C6C6"
+                        BorderThickness="1"
+                        Background="#FFFAFAFA">
+                    <TextBlock Text="{Binding PlaceholderContent}"
+                               TextWrapping="Wrap"
+                               LineHeight="24" />
+                </Border>
+            </Grid>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Menu Grid.Row="0"
+              Background="#FFE7E7E7">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New Project"
+                          InputGesture="Ctrl+N"
+                          Command="{Binding NewProjectCommand}" />
+                <MenuItem Header="_Open Project"
+                          InputGesture="Ctrl+O"
+                          Click="OpenProjectMenuItem_OnClick" />
+                <MenuItem Header="_Save Project"
+                          InputGesture="Ctrl+S"
+                          Click="SaveProjectMenuItem_OnClick" />
+                <MenuItem Header="Save _As Project"
+                          InputGesture="Ctrl+Shift+S"
+                          Click="SaveProjectAsMenuItem_OnClick" />
+            </MenuItem>
+
+            <MenuItem Header="_Run">
+                <MenuItem Header="_Run Project"
+                          InputGesture="F5"
+                          Command="{Binding RunProjectCommand}" />
+            </MenuItem>
+
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About AvaloniaGM"
+                          Command="{Binding ShowHelpCommand}" />
+            </MenuItem>
+        </Menu>
+
+        <Border Grid.Row="1"
+                BorderBrush="#FFC8C8C8"
+                BorderThickness="0,1,0,1"
+                Background="#FFEDEDED">
+            <StackPanel Orientation="Horizontal"
+                        Margin="8,6">
+                <Button MinWidth="96"
+                        Margin="0,0,8,0"
+                        Command="{Binding NewProjectCommand}">
+                    新建项目
+                </Button>
+
+                <Button MinWidth="96"
+                        Margin="0,0,8,0"
+                        Click="OpenProjectButton_OnClick">
+                    打开项目
+                </Button>
+
+                <Button MinWidth="96"
+                        Click="SaveProjectButton_OnClick">
+                    保存项目
+                </Button>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="2"
+              ColumnDefinitions="280,5,*"
+              Background="#FFEFEFEF">
+            <Border Grid.Column="0"
+                    BorderBrush="#FFC6C6C6"
+                    BorderThickness="0,0,1,0"
+                    Background="#FFF8F8F8">
+                <Grid RowDefinitions="Auto,*">
+                    <Border Padding="10,8"
+                            BorderBrush="#FFD0D0D0"
+                            BorderThickness="0,0,0,1"
+                            Background="#FFF0F0F0">
+                        <TextBlock Text="资源树"
+                                   FontWeight="SemiBold" />
+                    </Border>
+
+                    <TreeView Grid.Row="1"
+                              Margin="6"
+                              ItemsSource="{Binding ResourceTree}"
+                              ItemTemplate="{StaticResource ResourceTreeTemplate}" />
+                </Grid>
+            </Border>
+
+            <GridSplitter Grid.Column="1"
+                          Background="#FFD3D3D3"
+                          ResizeDirection="Columns"
+                          ShowsPreview="True" />
+
+            <Grid Grid.Column="2"
+                  RowDefinitions="*,5,180">
+                <Border Grid.Row="0"
+                        BorderBrush="#FFC6C6C6"
+                        BorderThickness="0,0,0,1"
+                        Background="White">
+                    <TabControl ItemsSource="{Binding OpenTabs}"
+                                SelectedItem="{Binding SelectedTab}"
+                                HorizontalContentAlignment="Stretch"
+                                VerticalContentAlignment="Stretch"
+                                ItemTemplate="{StaticResource EditorTabHeaderTemplate}"
+                                ContentTemplate="{StaticResource EditorTabContentTemplate}" />
+                </Border>
+
+                <GridSplitter Grid.Row="1"
+                              Background="#FFD3D3D3"
+                              ResizeDirection="Rows"
+                              ShowsPreview="True" />
+
+                <Border Grid.Row="2"
+                        Background="#FFFCFCFC">
+                    <Grid RowDefinitions="Auto,*">
+                        <Border Padding="10,8"
+                                BorderBrush="#FFD0D0D0"
+                                BorderThickness="0,1,0,1"
+                                Background="#FFF0F0F0">
+                            <TextBlock Text="输出"
+                                       FontWeight="SemiBold" />
+                        </Border>
+
+                        <TextBox Grid.Row="1"
+                                 Margin="8"
+                                 IsReadOnly="True"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                 Text="{Binding OutputText}" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
 </Window>
