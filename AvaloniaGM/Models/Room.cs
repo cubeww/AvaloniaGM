@@ -6,31 +6,31 @@ public class Room : Resource
 {
     public string Caption { get; set; } = string.Empty;
 
-    public int Width { get; set; }
+    public int Width { get; set; } = 1024;
 
-    public int Height { get; set; }
+    public int Height { get; set; } = 768;
 
-    public int VSnap { get; set; }
+    public int VSnap { get; set; } = 32;
 
-    public int HSnap { get; set; }
+    public int HSnap { get; set; } = 32;
 
     public bool Isometric { get; set; }
 
-    public int Speed { get; set; }
+    public int Speed { get; set; } = 30;
 
     public bool Persistent { get; set; }
 
-    public int Colour { get; set; }
+    public int Colour { get; set; } = 12632256;
 
-    public bool ShowColour { get; set; }
+    public bool ShowColour { get; set; } = true;
 
     public string Code { get; set; } = string.Empty;
 
     public bool EnableViews { get; set; }
 
-    public bool ViewClearScreen { get; set; }
+    public bool ViewClearScreen { get; set; } = true;
 
-    public bool ClearDisplayBuffer { get; set; }
+    public bool ClearDisplayBuffer { get; set; } = true;
 
     public RoomMakerSettings MakerSettings { get; set; } = new();
 
@@ -48,15 +48,24 @@ public class Room : Resource
 
     public int PhysicsWorldLeft { get; set; }
 
-    public int PhysicsWorldRight { get; set; }
+    public int PhysicsWorldRight { get; set; } = 1024;
 
-    public int PhysicsWorldBottom { get; set; }
+    public int PhysicsWorldBottom { get; set; } = 768;
 
     public float PhysicsWorldGravityX { get; set; }
 
-    public float PhysicsWorldGravityY { get; set; }
+    public float PhysicsWorldGravityY { get; set; } = 10f;
 
-    public float PhysicsWorldPixToMeters { get; set; }
+    public float PhysicsWorldPixToMeters { get; set; } = 0.1f;
+
+    public Room()
+    {
+        for (var index = 0; index < 8; index++)
+        {
+            Backgrounds.Add(new RoomBackground());
+            Views.Add(new RoomView());
+        }
+    }
 }
 
 public class RoomMakerSettings
@@ -100,25 +109,25 @@ public class RoomView
 
     public int YView { get; set; }
 
-    public int WView { get; set; }
+    public int WView { get; set; } = 1024;
 
-    public int HView { get; set; }
+    public int HView { get; set; } = 768;
 
     public int XPort { get; set; }
 
     public int YPort { get; set; }
 
-    public int WPort { get; set; }
+    public int WPort { get; set; } = 1024;
 
-    public int HPort { get; set; }
+    public int HPort { get; set; } = 768;
 
-    public int HBorder { get; set; }
+    public int HBorder { get; set; } = 32;
 
-    public int VBorder { get; set; }
+    public int VBorder { get; set; } = 32;
 
-    public int HSpeed { get; set; }
+    public int HSpeed { get; set; } = -1;
 
-    public int VSpeed { get; set; }
+    public int VSpeed { get; set; } = -1;
 }
 
 public class RoomBackground
@@ -133,9 +142,9 @@ public class RoomBackground
 
     public int Y { get; set; }
 
-    public bool HTiled { get; set; }
+    public bool HTiled { get; set; } = true;
 
-    public bool VTiled { get; set; }
+    public bool VTiled { get; set; } = true;
 
     public int HSpeed { get; set; }
 

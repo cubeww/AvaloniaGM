@@ -5,21 +5,21 @@ namespace AvaloniaGM.Models;
 
 public class Font : Resource
 {
-    public string FontName { get; set; } = string.Empty;
+    public string FontName { get; set; } = "Arial";
 
-    public float Size { get; set; }
+    public float Size { get; set; } = 12f;
 
     public bool Bold { get; set; }
 
     public bool Italic { get; set; }
 
-    public int First { get; set; }
+    public int First { get; set; } = 32;
 
-    public int Last { get; set; }
+    public int Last { get; set; } = 127;
 
-    public int CharSet { get; set; }
+    public int CharSet { get; set; } = 1;
 
-    public int AntiAlias { get; set; }
+    public int AntiAlias { get; set; } = 3;
 
     public List<FontGlyph> Glyphs { get; } = [];
 
@@ -28,6 +28,16 @@ public class Font : Resource
     public List<int> TextureGroups { get; } = [];
 
     public List<FontRange> Ranges { get; } = [];
+
+    public Font()
+    {
+        TextureGroups.Add(0);
+        Ranges.Add(new FontRange
+        {
+            Start = 32,
+            End = 127,
+        });
+    }
 }
 
 public class FontGlyph

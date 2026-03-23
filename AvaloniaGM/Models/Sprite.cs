@@ -13,7 +13,7 @@ public class Sprite : Resource
 
     public int YOrigin { get; set; }
 
-    public SpriteCollisionKind CollisionKind { get; set; } = SpriteCollisionKind.Precise;
+    public SpriteCollisionKind CollisionKind { get; set; } = SpriteCollisionKind.Rectangle;
 
     public int CollisionTolerance { get; set; }
 
@@ -39,9 +39,9 @@ public class Sprite : Resource
 
     public bool DynamicTexturePage { get; set; }
 
-    public int Width { get; set; }
+    public int Width { get; set; } = 32;
 
-    public int Height { get; set; }
+    public int Height { get; set; } = 32;
 
     public List<SpriteFrame> Frames { get; } = [];
 
@@ -50,6 +50,11 @@ public class Sprite : Resource
     public float SwfPrecision { get; set; } = DefaultSwfPrecision;
 
     public string? SpineFile { get; set; }
+
+    public Sprite()
+    {
+        TextureGroups.Add(0);
+    }
 }
 
 public class SpriteFrame

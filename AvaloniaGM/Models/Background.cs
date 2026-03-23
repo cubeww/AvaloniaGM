@@ -13,13 +13,13 @@ public class Background : Resource
 
     public int Height { get; set; }
 
-    public bool HTile { get; set; }
+    public bool HTile { get; set; } = true;
 
-    public bool VTile { get; set; }
+    public bool VTile { get; set; } = true;
 
-    public int TileWidth { get; set; }
+    public int TileWidth { get; set; } = 16;
 
-    public int TileHeight { get; set; }
+    public int TileHeight { get; set; } = 16;
 
     public int TileXOffset { get; set; }
 
@@ -34,4 +34,9 @@ public class Background : Resource
     public bool For3D { get; set; }
 
     public bool DynamicTexturePage { get; set; }
+
+    public Background()
+    {
+        TextureGroups.Add(0);
+    }
 }

@@ -8,7 +8,7 @@ public class GameObject : Resource
 
     public bool Solid { get; set; }
 
-    public bool Visible { get; set; }
+    public bool Visible { get; set; } = true;
 
     public int Depth { get; set; }
 
@@ -26,19 +26,19 @@ public class GameObject : Resource
 
     public int PhysicsObjectShape { get; set; }
 
-    public float PhysicsObjectDensity { get; set; }
+    public float PhysicsObjectDensity { get; set; } = 0.5f;
 
-    public float PhysicsObjectRestitution { get; set; }
+    public float PhysicsObjectRestitution { get; set; } = 0.1f;
 
     public int PhysicsObjectGroup { get; set; }
 
-    public float PhysicsObjectLinearDamping { get; set; }
+    public float PhysicsObjectLinearDamping { get; set; } = 0.1f;
 
-    public float PhysicsObjectAngularDamping { get; set; }
+    public float PhysicsObjectAngularDamping { get; set; } = 0.1f;
 
-    public float PhysicsObjectFriction { get; set; }
+    public float PhysicsObjectFriction { get; set; } = 0.2f;
 
-    public bool PhysicsObjectAwake { get; set; }
+    public bool PhysicsObjectAwake { get; set; } = true;
 
     public bool PhysicsObjectKinematic { get; set; }
 

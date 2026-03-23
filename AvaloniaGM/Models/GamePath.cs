@@ -6,17 +6,17 @@ public class GamePath : Resource
 {
     public int Kind { get; set; }
 
-    public bool Closed { get; set; }
+    public bool Closed { get; set; } = true;
 
-    public int Precision { get; set; }
+    public int Precision { get; set; } = 4;
 
     public List<GamePathPoint> Points { get; } = [];
 
-    public int BackRoom { get; set; }
+    public int BackRoom { get; set; } = -1;
 
-    public int HSnap { get; set; }
+    public int HSnap { get; set; } = 16;
 
-    public int VSnap { get; set; }
+    public int VSnap { get; set; } = 16;
 }
 
 public class GamePathPoint

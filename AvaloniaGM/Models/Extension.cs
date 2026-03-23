@@ -1,16 +1,18 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace AvaloniaGM.Models;
 
 public class Extension : Resource
 {
-    public string Version { get; set; } = string.Empty;
+    public string Version { get; set; } = "1.0.0";
 
     public string Author { get; set; } = string.Empty;
 
-    public string Date { get; set; } = string.Empty;
+    public string Date { get; set; } = DateTime.Today.ToString("dd/MM/yy", CultureInfo.InvariantCulture);
 
-    public string License { get; set; } = string.Empty;
+    public string License { get; set; } = "Free to use, also for commercial games.";
 
     public string Description { get; set; } = string.Empty;
 
@@ -28,7 +30,7 @@ public class Extension : Resource
 
     public string MacCompilerFlags { get; set; } = string.Empty;
 
-    public string ProductId { get; set; } = string.Empty;
+    public string ProductId { get; set; } = Guid.NewGuid().ToString("N").ToUpperInvariant();
 
     public string PackageId { get; set; } = string.Empty;
 
@@ -43,6 +45,11 @@ public class Extension : Resource
     public List<ExtensionPackageFile> PackageFiles { get; } = [];
 
     public List<ExtensionInclude> Includes { get; } = [];
+
+    public Extension()
+    {
+        ConfigOptions["Default"] = 779092206;
+    }
 }
 
 public class ExtensionIncludedResource
