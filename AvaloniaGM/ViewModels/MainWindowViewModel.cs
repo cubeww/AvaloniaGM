@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using AvaloniaGM.Models;
@@ -52,6 +53,10 @@ namespace AvaloniaGM.ViewModels
         [ObservableProperty]
         private Project? currentProject;
 
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(RunProjectCommand))]
+        private bool isRunProjectInProgress;
+
         public string WindowTitle => $"{ProjectName} - AvaloniaGM";
 
         public MainWindowViewModel()
@@ -68,8 +73,10 @@ namespace AvaloniaGM.ViewModels
             CreateNewProjectShell(writeLog: true);
         }
 
-        [RelayCommand]
-        private void RunProject()
+        private bool CanRunProject() => !IsRunProjectInProgress;
+
+        [RelayCommand(CanExecute = nameof(CanRunProject))]
+        private async Task RunProject()
         {
             if (string.IsNullOrWhiteSpace(CurrentProjectFilePath))
             {
@@ -79,6 +86,8 @@ namespace AvaloniaGM.ViewModels
 
             try
             {
+                IsRunProjectInProgress = true;
+
                 var project = EnsureCurrentProject();
                 var projectFilePath = Path.GetFullPath(CurrentProjectFilePath);
                 var projectDirectory = Path.GetDirectoryName(projectFilePath);
@@ -92,7 +101,7 @@ namespace AvaloniaGM.ViewModels
                 var outputExePath = Path.Combine(outputDirectory, GetProjectNameFromPath(projectFilePath, project.Name) + ".exe");
 
                 AppendOutput($"Building project to: {outputExePath}");
-                new ProjectBuilder().Build(project, outputExePath);
+                await Task.Run(() => new ProjectBuilder().Build(project, outputExePath));
 
                 Process.Start(new ProcessStartInfo
                 {
@@ -106,6 +115,10 @@ namespace AvaloniaGM.ViewModels
             catch (Exception ex)
             {
                 AppendOutput($"Failed to run project: {ex.Message}");
+            }
+            finally
+            {
+                IsRunProjectInProgress = false;
             }
         }
 

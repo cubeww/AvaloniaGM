@@ -1527,6 +1527,8 @@ public class DataWinSerializer
         {
             FileName = executablePath,
             UseShellExecute = false,
+            CreateNoWindow = true,
+            WindowStyle = ProcessWindowStyle.Hidden,
             RedirectStandardError = true,
             RedirectStandardOutput = true,
             WorkingDirectory = workingDirectory,
