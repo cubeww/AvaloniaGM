@@ -1,0 +1,157 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AvaloniaGM.ViewModels"
+             x:Class="AvaloniaGM.Views.Controls.BackgroundEditorView"
+             x:DataType="vm:BackgroundEditorViewModel">
+
+    <Grid ColumnDefinitions="320,*"
+          Margin="12">
+        <Border Grid.Column="0"
+                Margin="0,0,12,0"
+                Padding="14"
+                BorderBrush="#FFD6D6D6"
+                BorderThickness="1"
+                Background="#FFFBFBFB"
+                CornerRadius="4">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="12"
+                            Margin="0,0,20,0">
+                    <TextBlock Text="Background Properties"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+
+                    <Grid ColumnDefinitions="Auto,*"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          ColumnSpacing="10"
+                          RowSpacing="8">
+                        <TextBlock Grid.Row="0"
+                                   VerticalAlignment="Center"
+                                   Text="Name" />
+                        <TextBox Grid.Row="0"
+                                 Grid.Column="1"
+                                 IsReadOnly="True"
+                                 Text="{Binding Name}" />
+
+                        <TextBlock Grid.Row="1"
+                                   VerticalAlignment="Center"
+                                   Text="Size" />
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="1"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding BackgroundSizeText}" />
+
+                        <TextBlock Grid.Row="2"
+                                   VerticalAlignment="Center"
+                                   Text="Tile Width" />
+                        <TextBox Grid.Row="2"
+                                 Grid.Column="1"
+                                 Text="{Binding TileWidth}" />
+
+                        <TextBlock Grid.Row="3"
+                                   VerticalAlignment="Center"
+                                   Text="Tile Height" />
+                        <TextBox Grid.Row="3"
+                                 Grid.Column="1"
+                                 Text="{Binding TileHeight}" />
+
+                        <TextBlock Grid.Row="4"
+                                   VerticalAlignment="Center"
+                                   Text="Tile X Offset" />
+                        <TextBox Grid.Row="4"
+                                 Grid.Column="1"
+                                 Text="{Binding TileXOffset}" />
+
+                        <TextBlock Grid.Row="5"
+                                   VerticalAlignment="Center"
+                                   Text="Tile Y Offset" />
+                        <TextBox Grid.Row="5"
+                                 Grid.Column="1"
+                                 Text="{Binding TileYOffset}" />
+
+                        <TextBlock Grid.Row="6"
+                                   VerticalAlignment="Center"
+                                   Text="Horizontal Separation" />
+                        <TextBox Grid.Row="6"
+                                 Grid.Column="1"
+                                 Text="{Binding TileHorizontalSeparation}" />
+
+                        <TextBlock Grid.Row="7"
+                                   VerticalAlignment="Center"
+                                   Text="Vertical Separation" />
+                        <TextBox Grid.Row="7"
+                                 Grid.Column="1"
+                                 Text="{Binding TileVerticalSeparation}" />
+
+                        <TextBlock Grid.Row="8"
+                                   VerticalAlignment="Center"
+                                   Text="Image" />
+                        <TextBlock Grid.Row="8"
+                                   Grid.Column="1"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding ImageStatusText}" />
+                    </Grid>
+
+                    <StackPanel Spacing="6">
+                        <CheckBox Content="Tileset"
+                                  IsChecked="{Binding IsTileset}" />
+                        <CheckBox Content="Horizontal Tile"
+                                  IsChecked="{Binding HTile}" />
+                        <CheckBox Content="Vertical Tile"
+                                  IsChecked="{Binding VTile}" />
+                        <CheckBox Content="For 3D"
+                                  IsChecked="{Binding For3D}" />
+                        <CheckBox Content="Dynamic Texture Page"
+                                  IsChecked="{Binding DynamicTexturePage}" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Border Grid.Column="1"
+                Padding="12"
+                BorderBrush="#FFD6D6D6"
+                BorderThickness="1"
+                Background="#FFFDFDFD"
+                CornerRadius="4">
+            <Grid RowDefinitions="Auto,Auto,*">
+                <TextBlock Text="Background Preview"
+                           FontSize="18"
+                           FontWeight="SemiBold" />
+
+                <StackPanel Grid.Row="1"
+                            Margin="0,12,0,0"
+                            Orientation="Horizontal"
+                            Spacing="8">
+                    <Button Click="ImportImageButton_OnClick">
+                        Import Image
+                    </Button>
+
+                    <Button Command="{Binding RemoveImageCommand}">
+                        Remove Image
+                    </Button>
+                </StackPanel>
+
+                <Grid Grid.Row="2"
+                      Margin="0,12,0,0">
+                    <Border BorderBrush="#FFE0E0E0"
+                            BorderThickness="1"
+                            Background="#FFF4F4F4"
+                            CornerRadius="4">
+                        <Image Source="{Binding PreviewBitmap}"
+                               Stretch="Uniform"
+                               RenderOptions.BitmapInterpolationMode="None"
+                               Margin="12"
+                               IsVisible="{Binding HasImage}" />
+                    </Border>
+
+                    <TextBlock Text="No background image selected."
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Foreground="#FF666666"
+                               IsVisible="{Binding HasNoImage}" />
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

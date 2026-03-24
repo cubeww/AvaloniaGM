@@ -1,0 +1,186 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AvaloniaGM.ViewModels"
+             x:Class="AvaloniaGM.Views.Controls.SoundEditorView"
+             x:DataType="vm:SoundEditorViewModel">
+
+    <Grid ColumnDefinitions="360,*"
+          Margin="12">
+        <Border Grid.Column="0"
+                Margin="0,0,12,0"
+                Padding="14"
+                BorderBrush="#FFD6D6D6"
+                BorderThickness="1"
+                Background="#FFFBFBFB"
+                CornerRadius="4">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="12"
+                            Margin="0,0,20,0">
+                    <TextBlock Text="Sound Properties"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+
+                    <Grid ColumnDefinitions="Auto,*"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          ColumnSpacing="10"
+                          RowSpacing="8">
+                        <TextBlock Grid.Row="0"
+                                   VerticalAlignment="Center"
+                                   Text="Name" />
+                        <TextBox Grid.Row="0"
+                                 Grid.Column="1"
+                                 IsReadOnly="True"
+                                 Text="{Binding Name}" />
+
+                        <TextBlock Grid.Row="1"
+                                   VerticalAlignment="Center"
+                                   Text="Kind" />
+                        <TextBox Grid.Row="1"
+                                 Grid.Column="1"
+                                 Text="{Binding Kind}" />
+
+                        <TextBlock Grid.Row="2"
+                                   VerticalAlignment="Center"
+                                   Text="Extension" />
+                        <TextBox Grid.Row="2"
+                                 Grid.Column="1"
+                                 Text="{Binding Extension}" />
+
+                        <TextBlock Grid.Row="3"
+                                   VerticalAlignment="Center"
+                                   Text="Original Name" />
+                        <TextBox Grid.Row="3"
+                                 Grid.Column="1"
+                                 Text="{Binding OriginalName}" />
+
+                        <TextBlock Grid.Row="4"
+                                   VerticalAlignment="Center"
+                                   Text="Effects" />
+                        <TextBox Grid.Row="4"
+                                 Grid.Column="1"
+                                 Text="{Binding Effects}" />
+
+                        <TextBlock Grid.Row="5"
+                                   VerticalAlignment="Center"
+                                   Text="Volume" />
+                        <TextBox Grid.Row="5"
+                                 Grid.Column="1"
+                                 Text="{Binding Volume}" />
+
+                        <TextBlock Grid.Row="6"
+                                   VerticalAlignment="Center"
+                                   Text="Pan" />
+                        <TextBox Grid.Row="6"
+                                 Grid.Column="1"
+                                 Text="{Binding Pan}" />
+
+                        <TextBlock Grid.Row="7"
+                                   VerticalAlignment="Center"
+                                   Text="Compression Quality" />
+                        <TextBox Grid.Row="7"
+                                 Grid.Column="1"
+                                 Text="{Binding CompressionQuality}" />
+
+                        <TextBlock Grid.Row="8"
+                                   VerticalAlignment="Center"
+                                   Text="Sample Rate" />
+                        <TextBox Grid.Row="8"
+                                 Grid.Column="1"
+                                 Text="{Binding SampleRate}" />
+
+                        <TextBlock Grid.Row="9"
+                                   VerticalAlignment="Center"
+                                   Text="Bit Depth" />
+                        <TextBox Grid.Row="9"
+                                 Grid.Column="1"
+                                 Text="{Binding BitDepth}" />
+
+                        <TextBlock Grid.Row="10"
+                                   VerticalAlignment="Center"
+                                   Text="Audio Group" />
+                        <TextBox Grid.Row="10"
+                                 Grid.Column="1"
+                                 Text="{Binding AudioGroup}" />
+                    </Grid>
+
+                    <StackPanel Spacing="6">
+                        <CheckBox Content="Preload"
+                                  IsChecked="{Binding Preload}" />
+                        <CheckBox Content="Compressed"
+                                  IsChecked="{Binding Compressed}" />
+                        <CheckBox Content="Streamed"
+                                  IsChecked="{Binding Streamed}" />
+                        <CheckBox Content="Uncompress On Load"
+                                  IsChecked="{Binding UncompressOnLoad}" />
+                        <CheckBox Content="Stereo"
+                                  IsChecked="{Binding Stereo}" />
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="Auto,*"
+                          RowDefinitions="Auto"
+                          ColumnSpacing="10">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="Export Directory" />
+                        <TextBox Grid.Column="1"
+                                 Text="{Binding ExportDirectory}" />
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Border Grid.Column="1"
+                Padding="12"
+                BorderBrush="#FFD6D6D6"
+                BorderThickness="1"
+                Background="#FFFDFDFD"
+                CornerRadius="4">
+            <Grid RowDefinitions="Auto,Auto,*">
+                <TextBlock Text="Audio File"
+                           FontSize="18"
+                           FontWeight="SemiBold" />
+
+                <StackPanel Grid.Row="1"
+                            Margin="0,12,0,0"
+                            Orientation="Horizontal"
+                            Spacing="8">
+                    <Button Click="ImportAudioButton_OnClick">
+                        Import Audio
+                    </Button>
+
+                    <Button Command="{Binding RemoveAudioCommand}">
+                        Remove Audio
+                    </Button>
+                </StackPanel>
+
+                <Border Grid.Row="2"
+                        Margin="0,12,0,0"
+                        Padding="16"
+                        BorderBrush="#FFE0E0E0"
+                        BorderThickness="1"
+                        Background="#FFF7F7F7"
+                        CornerRadius="4">
+                    <Grid RowDefinitions="Auto,Auto,Auto,*"
+                          RowSpacing="8">
+                        <TextBlock Text="{Binding AudioStatusText}"
+                                   FontSize="16"
+                                   FontWeight="SemiBold" />
+
+                        <TextBlock Grid.Row="1"
+                                   Text="{Binding OriginalName}"
+                                   Foreground="#FF444444" />
+
+                        <TextBlock Grid.Row="2"
+                                   Text="{Binding Extension, StringFormat='Extension: {0}'}"
+                                   Foreground="#FF666666" />
+
+                        <TextBlock Grid.Row="3"
+                                   VerticalAlignment="Bottom"
+                                   Text="Audio playback preview is not implemented yet."
+                                   Foreground="#FF777777" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

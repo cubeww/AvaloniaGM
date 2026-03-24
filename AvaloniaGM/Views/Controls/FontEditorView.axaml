@@ -1,0 +1,190 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AvaloniaGM.ViewModels"
+             x:Class="AvaloniaGM.Views.Controls.FontEditorView"
+             x:DataType="vm:FontEditorViewModel">
+
+    <Grid ColumnDefinitions="340,*"
+          Margin="12">
+        <Border Grid.Column="0"
+                Margin="0,0,12,0"
+                Padding="14"
+                BorderBrush="#FFD6D6D6"
+                BorderThickness="1"
+                Background="#FFFBFBFB"
+                CornerRadius="4">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="12"
+                            Margin="0,0,20,0">
+                    <TextBlock Text="Font Properties"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+
+                    <Grid ColumnDefinitions="Auto,*"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          ColumnSpacing="10"
+                          RowSpacing="8">
+                        <TextBlock Grid.Row="0"
+                                   VerticalAlignment="Center"
+                                   Text="Name" />
+                        <TextBox Grid.Row="0"
+                                 Grid.Column="1"
+                                 IsReadOnly="True"
+                                 Text="{Binding Name}" />
+
+                        <TextBlock Grid.Row="1"
+                                   VerticalAlignment="Center"
+                                   Text="Font Family" />
+                        <TextBox Grid.Row="1"
+                                 Grid.Column="1"
+                                 Text="{Binding FontName}" />
+
+                        <TextBlock Grid.Row="2"
+                                   VerticalAlignment="Center"
+                                   Text="Size" />
+                        <TextBox Grid.Row="2"
+                                 Grid.Column="1"
+                                 Text="{Binding Size}" />
+
+                        <TextBlock Grid.Row="3"
+                                   VerticalAlignment="Center"
+                                   Text="First Character" />
+                        <TextBox Grid.Row="3"
+                                 Grid.Column="1"
+                                 Text="{Binding First}" />
+
+                        <TextBlock Grid.Row="4"
+                                   VerticalAlignment="Center"
+                                   Text="Last Character" />
+                        <TextBox Grid.Row="4"
+                                 Grid.Column="1"
+                                 Text="{Binding Last}" />
+
+                        <TextBlock Grid.Row="5"
+                                   VerticalAlignment="Center"
+                                   Text="Charset" />
+                        <TextBox Grid.Row="5"
+                                 Grid.Column="1"
+                                 Text="{Binding CharSet}" />
+
+                        <TextBlock Grid.Row="6"
+                                   VerticalAlignment="Center"
+                                   Text="AntiAlias" />
+                        <TextBox Grid.Row="6"
+                                 Grid.Column="1"
+                                 Text="{Binding AntiAlias}" />
+
+                        <TextBlock Grid.Row="7"
+                                   VerticalAlignment="Center"
+                                   Text="Glyphs" />
+                        <TextBlock Grid.Row="7"
+                                   Grid.Column="1"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding GlyphCount}" />
+                    </Grid>
+
+                    <StackPanel Spacing="6">
+                        <CheckBox Content="Bold"
+                                  IsChecked="{Binding Bold}" />
+                        <CheckBox Content="Italic"
+                                  IsChecked="{Binding Italic}" />
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="Auto,*"
+                          RowDefinitions="Auto,Auto"
+                          ColumnSpacing="10"
+                          RowSpacing="8">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="Range" />
+                        <TextBlock Grid.Column="1"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding RangeText}" />
+
+                        <TextBlock Grid.Row="1"
+                                   VerticalAlignment="Center"
+                                   Text="Atlas" />
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="1"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding BitmapSizeText}" />
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Grid Grid.Column="1"
+              RowDefinitions="Auto,Auto,*"
+              RowSpacing="12">
+            <Border Grid.Row="0"
+                    Padding="12"
+                    BorderBrush="#FFD6D6D6"
+                    BorderThickness="1"
+                    Background="#FFFDFDFD"
+                    CornerRadius="4">
+                <Grid RowDefinitions="Auto,Auto,*"
+                      RowSpacing="10">
+                    <TextBlock Text="Text Preview"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+
+                    <TextBox Grid.Row="1"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             MinHeight="70"
+                             Text="{Binding PreviewText}" />
+
+                    <Border Grid.Row="2"
+                            Padding="16"
+                            BorderBrush="#FFE0E0E0"
+                            BorderThickness="1"
+                            Background="#FFFFFFFF"
+                            CornerRadius="4">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollBarVisibility="Auto">
+                            <TextBlock Text="{Binding PreviewText}"
+                                       TextWrapping="Wrap"
+                                       FontFamily="{Binding PreviewFontFamily}"
+                                       FontSize="{Binding Size}"
+                                       FontWeight="{Binding PreviewFontWeight}"
+                                       FontStyle="{Binding PreviewFontStyle}" />
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="1"
+                    Padding="12"
+                    BorderBrush="#FFD6D6D6"
+                    BorderThickness="1"
+                    Background="#FFFDFDFD"
+                    CornerRadius="4">
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Text="Font Atlas Preview"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+
+                    <Grid Grid.Row="1"
+                          Margin="0,12,0,0">
+                        <Border BorderBrush="#FFE0E0E0"
+                                BorderThickness="1"
+                                Background="#FFF4F4F4"
+                                CornerRadius="4">
+                            <Image Source="{Binding BitmapPreview}"
+                                   Stretch="Uniform"
+                                   RenderOptions.BitmapInterpolationMode="None"
+                                   Margin="12"
+                                   IsVisible="{Binding HasBitmapPreview}" />
+                        </Border>
+
+                        <TextBlock Text="No font atlas image is available."
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Foreground="#FF666666"
+                                   IsVisible="{Binding HasNoBitmapPreview}" />
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

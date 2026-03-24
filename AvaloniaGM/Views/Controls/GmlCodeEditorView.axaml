@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:avaloniaEdit="using:AvaloniaEdit"
+             x:Class="AvaloniaGM.Views.Controls.GmlCodeEditorView">
+
+    <Border BorderBrush="#FFD6D6D6"
+            BorderThickness="1"
+            Background="#FFFFFFFF"
+            CornerRadius="4"
+            ClipToBounds="True">
+        <avaloniaEdit:TextEditor Name="Editor"
+                                 ShowLineNumbers="True"
+                                 HorizontalScrollBarVisibility="Auto"
+                                 VerticalScrollBarVisibility="Auto"
+                                 WordWrap="False"
+                                 FontFamily="Cascadia Mono, Consolas, Courier New"
+                                 FontSize="14" />
+    </Border>
+</UserControl>

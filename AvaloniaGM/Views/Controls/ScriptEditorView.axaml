@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AvaloniaGM.ViewModels"
+             xmlns:controls="using:AvaloniaGM.Views.Controls"
+             x:Class="AvaloniaGM.Views.Controls.ScriptEditorView"
+             x:DataType="vm:ScriptEditorViewModel">
+
+    <Grid RowDefinitions="Auto,*"
+          Margin="12">
+        <Border Padding="12"
+                BorderBrush="#FFD6D6D6"
+                BorderThickness="1"
+                Background="#FFFDFDFD"
+                CornerRadius="4">
+            <Grid ColumnDefinitions="Auto,*"
+                  ColumnSpacing="10">
+                <TextBlock Text="Name"
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold" />
+
+                <TextBox Grid.Column="1"
+                         IsReadOnly="True"
+                         Text="{Binding Name}" />
+            </Grid>
+        </Border>
+
+        <controls:GmlCodeEditorView Grid.Row="1"
+                                    Margin="0,12,0,0"
+                                    DataContext="{Binding}" />
+    </Grid>
+</UserControl>

@@ -61,6 +61,26 @@
         <DataTemplate DataType="vm:SpriteEditorViewModel">
             <controls:SpriteEditorView />
         </DataTemplate>
+
+        <DataTemplate DataType="vm:BackgroundEditorViewModel">
+            <controls:BackgroundEditorView />
+        </DataTemplate>
+
+        <DataTemplate DataType="vm:SoundEditorViewModel">
+            <controls:SoundEditorView />
+        </DataTemplate>
+
+        <DataTemplate DataType="vm:FontEditorViewModel">
+            <controls:FontEditorView />
+        </DataTemplate>
+
+        <DataTemplate DataType="vm:ScriptEditorViewModel">
+            <controls:ScriptEditorView />
+        </DataTemplate>
+
+        <DataTemplate DataType="vm:ObjectEditorViewModel">
+            <controls:ObjectEditorView />
+        </DataTemplate>
     </Window.DataTemplates>
 
     <Window.Styles>

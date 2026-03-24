@@ -1,0 +1,333 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AvaloniaGM.ViewModels"
+             xmlns:controls="using:AvaloniaGM.Views.Controls"
+             x:Class="AvaloniaGM.Views.Controls.ObjectEditorView"
+             x:DataType="vm:ObjectEditorViewModel">
+
+    <Grid ColumnDefinitions="360,*"
+          Margin="12">
+        <Border Grid.Column="0"
+                Margin="0,0,12,0"
+                Padding="14"
+                BorderBrush="#FFD6D6D6"
+                BorderThickness="1"
+                Background="#FFFBFBFB"
+                CornerRadius="4">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="12"
+                            Margin="0,0,20,0">
+                    <TextBlock Text="Object Properties"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+
+                    <Grid ColumnDefinitions="Auto,*"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+                          ColumnSpacing="10"
+                          RowSpacing="8">
+                        <TextBlock Grid.Row="0"
+                                   VerticalAlignment="Center"
+                                   Text="Name" />
+                        <TextBox Grid.Row="0"
+                                 Grid.Column="1"
+                                 IsReadOnly="True"
+                                 Text="{Binding Name}" />
+
+                        <TextBlock Grid.Row="1"
+                                   VerticalAlignment="Center"
+                                   Text="Sprite" />
+                        <ComboBox Grid.Row="1"
+                                  Grid.Column="1"
+                                  ItemsSource="{Binding SpriteOptions}"
+                                  SelectedItem="{Binding SpriteOption}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="2"
+                                   VerticalAlignment="Center"
+                                   Text="Parent" />
+                        <ComboBox Grid.Row="2"
+                                  Grid.Column="1"
+                                  ItemsSource="{Binding ParentOptions}"
+                                  SelectedItem="{Binding ParentOption}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="3"
+                                   VerticalAlignment="Center"
+                                   Text="Mask" />
+                        <ComboBox Grid.Row="3"
+                                  Grid.Column="1"
+                                  ItemsSource="{Binding MaskOptions}"
+                                  SelectedItem="{Binding MaskOption}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="4"
+                                   VerticalAlignment="Center"
+                                   Text="Depth" />
+                        <TextBox Grid.Row="4"
+                                 Grid.Column="1"
+                                 Text="{Binding Depth}" />
+
+                        <TextBlock Grid.Row="5"
+                                   VerticalAlignment="Center"
+                                   Text="Sprite Preview" />
+                        <TextBlock Grid.Row="5"
+                                   Grid.Column="1"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding SpriteOption.DisplayName}" />
+                    </Grid>
+
+                    <Border Padding="8"
+                            BorderBrush="#FFE0E0E0"
+                            BorderThickness="1"
+                            Background="#FFF4F4F4"
+                            CornerRadius="4">
+                        <Grid>
+                            <Image Source="{Binding SpritePreview}"
+                                   Stretch="Uniform"
+                                   RenderOptions.BitmapInterpolationMode="None"
+                                   Height="120"
+                                   IsVisible="{Binding HasSpritePreview}" />
+
+                            <TextBlock Text="No sprite assigned."
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="#FF666666"
+                                       IsVisible="{Binding HasNoSpritePreview}" />
+                        </Grid>
+                    </Border>
+
+                    <StackPanel Spacing="6">
+                        <CheckBox Content="Visible"
+                                  IsChecked="{Binding Visible}" />
+                        <CheckBox Content="Solid"
+                                  IsChecked="{Binding Solid}" />
+                        <CheckBox Content="Persistent"
+                                  IsChecked="{Binding Persistent}" />
+                    </StackPanel>
+
+                    <TextBlock Text="Physics"
+                               FontSize="16"
+                               FontWeight="SemiBold" />
+
+                    <StackPanel Spacing="6">
+                        <CheckBox Content="Physics Object"
+                                  IsChecked="{Binding PhysicsObject}" />
+                        <CheckBox Content="Physics Sensor"
+                                  IsChecked="{Binding PhysicsObjectSensor}" />
+                        <CheckBox Content="Physics Awake"
+                                  IsChecked="{Binding PhysicsObjectAwake}" />
+                        <CheckBox Content="Physics Kinematic"
+                                  IsChecked="{Binding PhysicsObjectKinematic}" />
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="Auto,*"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          ColumnSpacing="10"
+                          RowSpacing="8">
+                        <TextBlock Grid.Row="0"
+                                   VerticalAlignment="Center"
+                                   Text="Shape" />
+                        <TextBox Grid.Row="0"
+                                 Grid.Column="1"
+                                 Text="{Binding PhysicsObjectShape}" />
+
+                        <TextBlock Grid.Row="1"
+                                   VerticalAlignment="Center"
+                                   Text="Density" />
+                        <TextBox Grid.Row="1"
+                                 Grid.Column="1"
+                                 Text="{Binding PhysicsObjectDensity}" />
+
+                        <TextBlock Grid.Row="2"
+                                   VerticalAlignment="Center"
+                                   Text="Restitution" />
+                        <TextBox Grid.Row="2"
+                                 Grid.Column="1"
+                                 Text="{Binding PhysicsObjectRestitution}" />
+
+                        <TextBlock Grid.Row="3"
+                                   VerticalAlignment="Center"
+                                   Text="Group" />
+                        <TextBox Grid.Row="3"
+                                 Grid.Column="1"
+                                 Text="{Binding PhysicsObjectGroup}" />
+
+                        <TextBlock Grid.Row="4"
+                                   VerticalAlignment="Center"
+                                   Text="Linear Damping" />
+                        <TextBox Grid.Row="4"
+                                 Grid.Column="1"
+                                 Text="{Binding PhysicsObjectLinearDamping}" />
+
+                        <TextBlock Grid.Row="5"
+                                   VerticalAlignment="Center"
+                                   Text="Angular Damping" />
+                        <TextBox Grid.Row="5"
+                                 Grid.Column="1"
+                                 Text="{Binding PhysicsObjectAngularDamping}" />
+
+                        <TextBlock Grid.Row="6"
+                                   VerticalAlignment="Center"
+                                   Text="Friction" />
+                        <TextBox Grid.Row="6"
+                                 Grid.Column="1"
+                                 Text="{Binding PhysicsObjectFriction}" />
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Grid Grid.Column="1"
+              RowDefinitions="Auto,*"
+              RowSpacing="12">
+            <Border Padding="12"
+                    BorderBrush="#FFD6D6D6"
+                    BorderThickness="1"
+                    Background="#FFFDFDFD"
+                    CornerRadius="4">
+                <Grid ColumnDefinitions="Auto,160,12,100,12,220,12,Auto,12,Auto"
+                      RowDefinitions="Auto,Auto"
+                      RowSpacing="8">
+                    <TextBlock VerticalAlignment="Center"
+                               Text="Add Event" />
+                    <ComboBox Grid.Column="1"
+                              ItemsSource="{Binding EventTypes}"
+                              SelectedItem="{Binding NewEventType}" />
+
+                    <TextBlock Grid.Column="3"
+                               VerticalAlignment="Center"
+                               Text="Number" />
+                    <TextBox Grid.Column="5"
+                             Text="{Binding NewEventNumber}" />
+
+                    <ComboBox Grid.Row="1"
+                              Grid.Column="1"
+                              Grid.ColumnSpan="5"
+                              IsVisible="{Binding IsAddingCollisionEvent}"
+                              ItemsSource="{Binding CollisionObjectOptions}"
+                              SelectedItem="{Binding NewCollisionObjectOption}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayName}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <Button Grid.Column="7"
+                            Grid.RowSpan="2"
+                            Command="{Binding AddEventCommand}">
+                        Add Event
+                    </Button>
+
+                    <Button Grid.Column="9"
+                            Grid.RowSpan="2"
+                            Command="{Binding RemoveSelectedEventCommand}">
+                        Remove Selected
+                    </Button>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1"
+                  ColumnDefinitions="280,*"
+                  ColumnSpacing="12">
+                <Border Grid.Column="0"
+                        Padding="12"
+                        BorderBrush="#FFD6D6D6"
+                        BorderThickness="1"
+                        Background="#FFFDFDFD"
+                        CornerRadius="4">
+                    <Grid RowDefinitions="Auto,*">
+                        <TextBlock Text="Events"
+                                   FontSize="18"
+                                   FontWeight="SemiBold" />
+
+                        <ListBox Grid.Row="1"
+                                 Margin="0,12,0,0"
+                                 ItemsSource="{Binding Events}"
+                                 SelectedItem="{Binding SelectedEvent}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ObjectEventItemViewModel">
+                                    <Border Padding="8">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{Binding DisplayName}"
+                                                       FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding ActionSummary}"
+                                                       Foreground="#FF666666"
+                                                       TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Column="1"
+                      RowDefinitions="Auto,*">
+                    <Border Padding="12"
+                            BorderBrush="#FFD6D6D6"
+                            BorderThickness="1"
+                            Background="#FFFDFDFD"
+                            CornerRadius="4">
+                        <Grid>
+                            <ContentControl Content="{Binding SelectedEvent}"
+                                            IsVisible="{Binding HasSelectedEvent}">
+                                <ContentControl.ContentTemplate>
+                                    <DataTemplate x:DataType="vm:ObjectEventItemViewModel">
+                                        <Grid ColumnDefinitions="Auto,*"
+                                              ColumnSpacing="10">
+                                            <TextBlock Text="Selected Event"
+                                                       VerticalAlignment="Center"
+                                                       FontWeight="SemiBold" />
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding DisplayName}"
+                                                       VerticalAlignment="Center" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ContentControl.ContentTemplate>
+                            </ContentControl>
+
+                            <TextBlock Text="Select or create an event to edit its code."
+                                       Foreground="#FF666666"
+                                       IsVisible="{Binding HasNoSelectedEvent}" />
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Row="1"
+                          Margin="0,12,0,0">
+                        <Grid IsVisible="{Binding HasSelectedEvent}">
+                            <controls:GmlCodeEditorView DataContext="{Binding SelectedCodeDocument}" />
+                        </Grid>
+
+                        <Border BorderBrush="#FFD6D6D6"
+                                BorderThickness="1"
+                                Background="#FFF8F8F8"
+                                CornerRadius="4"
+                                IsVisible="{Binding HasNoSelectedEvent}">
+                            <TextBlock Text="No event selected."
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="#FF666666" />
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -432,6 +432,16 @@ namespace AvaloniaGM.ViewModels
             {
                 ProjectResourceKind.Sprite when resource is Sprite sprite
                     => new SpriteEditorViewModel(sprite, RefreshResourceVisuals, AppendOutput),
+                ProjectResourceKind.Script when resource is Script script
+                    => new ScriptEditorViewModel(script),
+                ProjectResourceKind.Sound when resource is Sound sound
+                    => new SoundEditorViewModel(sound, AppendOutput),
+                ProjectResourceKind.Font when resource is Font font
+                    => new FontEditorViewModel(font),
+                ProjectResourceKind.Object when resource is GameObject gameObject
+                    => new ObjectEditorViewModel(EnsureCurrentProject(), gameObject, RefreshResourceVisuals, AppendOutput),
+                ProjectResourceKind.Background when resource is Background background
+                    => new BackgroundEditorViewModel(background, RefreshResourceVisuals, AppendOutput),
                 _ => new ResourceSummaryEditorViewModel(
                     resource.Name,
                     GetResourceSubtitle(kind),
