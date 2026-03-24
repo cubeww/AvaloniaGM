@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Avalonia.Media;
@@ -70,7 +71,42 @@ namespace AvaloniaGM.ViewModels
         [RelayCommand]
         private void RunProject()
         {
-            AppendOutput("Run Project triggered. Build and launch workflow is not implemented yet.");
+            if (string.IsNullOrWhiteSpace(CurrentProjectFilePath))
+            {
+                AppendOutput("Run Project requires a saved project file.");
+                return;
+            }
+
+            try
+            {
+                var project = EnsureCurrentProject();
+                var projectFilePath = Path.GetFullPath(CurrentProjectFilePath);
+                var projectDirectory = Path.GetDirectoryName(projectFilePath);
+                if (string.IsNullOrWhiteSpace(projectDirectory))
+                {
+                    AppendOutput("Unable to resolve the project directory.");
+                    return;
+                }
+
+                var outputDirectory = Path.Combine(projectDirectory, "bin");
+                var outputExePath = Path.Combine(outputDirectory, GetProjectNameFromPath(projectFilePath, project.Name) + ".exe");
+
+                AppendOutput($"Building project to: {outputExePath}");
+                new ProjectBuilder().Build(project, outputExePath);
+
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = outputExePath,
+                    WorkingDirectory = outputDirectory,
+                    UseShellExecute = true,
+                });
+
+                AppendOutput($"Launched project: {outputExePath}");
+            }
+            catch (Exception ex)
+            {
+                AppendOutput($"Failed to run project: {ex.Message}");
+            }
         }
 
         [RelayCommand]

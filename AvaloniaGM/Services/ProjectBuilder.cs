@@ -126,6 +126,11 @@ public class ProjectBuilder
 
     private static void CopyRunnerExecutable(string outputExePath)
     {
+        if (File.Exists(outputExePath))
+        {
+            return;
+        }
+
         var runnerPath = ResolveRunnerExecutablePath();
         Directory.CreateDirectory(Path.GetDirectoryName(outputExePath)!);
         File.Copy(runnerPath, outputExePath, overwrite: true);
@@ -164,8 +169,13 @@ public class ProjectBuilder
             throw new InvalidOperationException($"Streamed sound '{sound.Name}' does not contain source audio data.");
         }
 
-        var ffmpegPath = ResolveFfmpegExecutablePath();
         var outputPath = Path.Combine(outputDirectory, sound.Name + ".ogg");
+        if (File.Exists(outputPath))
+        {
+            return;
+        }
+
+        var ffmpegPath = ResolveFfmpegExecutablePath();
         var tempDirectory = CreateTemporaryAudioDirectory(sound.Name);
         try
         {
@@ -348,6 +358,11 @@ public class ProjectBuilder
         }
 
         var fullPath = Path.Combine(outputDirectory, sanitizedRelativePath);
+        if (File.Exists(fullPath))
+        {
+            return;
+        }
+
         var fullDirectory = Path.GetDirectoryName(fullPath);
         if (!string.IsNullOrWhiteSpace(fullDirectory))
         {
