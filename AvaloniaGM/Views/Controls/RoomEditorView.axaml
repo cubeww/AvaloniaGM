@@ -1,0 +1,318 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AvaloniaGM.ViewModels"
+             xmlns:controls="using:AvaloniaGM.Views.Controls"
+             xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Svg.Controls.Skia.Avalonia"
+             x:Class="AvaloniaGM.Views.Controls.RoomEditorView"
+             x:DataType="vm:RoomEditorViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="ToggleButton.room-toolbar-toggle">
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+
+        <Style Selector="ToggleButton.room-toolbar-toggle:pointerover">
+            <Setter Property="Background" Value="#FFF0F4FA" />
+            <Setter Property="BorderBrush" Value="#FFD5DFEC" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <Style Selector="ToggleButton.room-toolbar-toggle:checked">
+            <Setter Property="Background" Value="#FFE3EBF6" />
+            <Setter Property="BorderBrush" Value="#FFC5D3E4" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <Style Selector="ToggleButton.room-toolbar-toggle:pressed">
+            <Setter Property="Background" Value="#FFD8E3F0" />
+            <Setter Property="BorderBrush" Value="#FFB7C8DC" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid ColumnDefinitions="340,*"
+          Margin="12">
+        <Border Grid.Column="0"
+                Margin="0,0,12,0"
+                Padding="14"
+                BorderBrush="#FFD6D6D6"
+                BorderThickness="1"
+                Background="#FFFBFBFB"
+                CornerRadius="4">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="12"
+                            Margin="0,0,20,0">
+                    <TextBlock Text="Room Properties"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+
+                    <Grid ColumnDefinitions="Auto,*"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+                          ColumnSpacing="10"
+                          RowSpacing="8">
+                        <TextBlock Grid.Row="0"
+                                   VerticalAlignment="Center"
+                                   Text="Name" />
+                        <TextBox Grid.Row="0"
+                                 Grid.Column="1"
+                                 IsReadOnly="True"
+                                 Text="{Binding Name}" />
+
+                        <TextBlock Grid.Row="1"
+                                   VerticalAlignment="Center"
+                                   Text="Caption" />
+                        <TextBox Grid.Row="1"
+                                 Grid.Column="1"
+                                 Text="{Binding Caption}" />
+
+                        <TextBlock Grid.Row="2"
+                                   VerticalAlignment="Center"
+                                   Text="Width" />
+                        <TextBox Grid.Row="2"
+                                 Grid.Column="1"
+                                 Text="{Binding Width}" />
+
+                        <TextBlock Grid.Row="3"
+                                   VerticalAlignment="Center"
+                                   Text="Height" />
+                        <TextBox Grid.Row="3"
+                                 Grid.Column="1"
+                                 Text="{Binding Height}" />
+
+                        <TextBlock Grid.Row="4"
+                                   VerticalAlignment="Center"
+                                   Text="Speed" />
+                        <TextBox Grid.Row="4"
+                                 Grid.Column="1"
+                                 Text="{Binding Speed}" />
+
+                        <TextBlock Grid.Row="5"
+                                   VerticalAlignment="Center"
+                                   Text="Colour" />
+                        <TextBox Grid.Row="5"
+                                 Grid.Column="1"
+                                 Text="{Binding Colour}" />
+                    </Grid>
+
+                    <StackPanel Spacing="6">
+                        <CheckBox Content="Persistent"
+                                  IsChecked="{Binding Persistent}" />
+                        <CheckBox Content="Replace Instances On Paint"
+                                  IsChecked="{Binding DeleteUnderlyingObj}" />
+                        <CheckBox Content="Replace Tiles On Paint"
+                                  IsChecked="{Binding DeleteUnderlyingTiles}" />
+                    </StackPanel>
+
+                    <TextBlock Text="Editing"
+                               FontSize="16"
+                               FontWeight="SemiBold" />
+
+                    <Grid ColumnDefinitions="Auto,*"
+                          RowDefinitions="Auto"
+                          ColumnSpacing="10">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="Layer" />
+                        <ComboBox Grid.Column="1"
+                                  ItemsSource="{Binding LayerOptions}"
+                                  SelectedItem="{Binding ActiveLayer}" />
+                    </Grid>
+
+                    <TextBlock Text="{Binding PlacementHint}"
+                               Foreground="#FF666666"
+                               TextWrapping="Wrap" />
+
+                    <StackPanel Spacing="10"
+                                IsVisible="{Binding IsEditingInstances}">
+                        <TextBlock Text="Object"
+                                   FontWeight="SemiBold" />
+                        <ComboBox ItemsSource="{Binding ObjectOptions}"
+                                  SelectedItem="{Binding SelectedObjectOption}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Spacing="10"
+                                IsVisible="{Binding IsEditingTiles}">
+                        <TextBlock Text="Tileset"
+                                   FontWeight="SemiBold" />
+                        <ComboBox ItemsSource="{Binding BackgroundOptions}"
+                                  SelectedItem="{Binding SelectedBackgroundOption}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <Grid ColumnDefinitions="Auto,*"
+                              RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                              ColumnSpacing="10"
+                              RowSpacing="8">
+                            <TextBlock Grid.Row="0"
+                                       VerticalAlignment="Center"
+                                       Text="Source X" />
+                            <TextBox Grid.Row="0"
+                                     Grid.Column="1"
+                                     Text="{Binding TileSourceX}" />
+
+                            <TextBlock Grid.Row="1"
+                                       VerticalAlignment="Center"
+                                       Text="Source Y" />
+                            <TextBox Grid.Row="1"
+                                     Grid.Column="1"
+                                     Text="{Binding TileSourceY}" />
+
+                            <TextBlock Grid.Row="2"
+                                       VerticalAlignment="Center"
+                                       Text="Tile Width" />
+                            <TextBox Grid.Row="2"
+                                     Grid.Column="1"
+                                     Text="{Binding TileWidth}" />
+
+                            <TextBlock Grid.Row="3"
+                                       VerticalAlignment="Center"
+                                       Text="Tile Height" />
+                            <TextBox Grid.Row="3"
+                                     Grid.Column="1"
+                                     Text="{Binding TileHeight}" />
+
+                            <TextBlock Grid.Row="4"
+                                       VerticalAlignment="Center"
+                                       Text="Depth" />
+                            <TextBox Grid.Row="4"
+                                     Grid.Column="1"
+                                     Text="{Binding TileDepth}" />
+                        </Grid>
+
+                        <Border Height="220"
+                                BorderBrush="#FFE0E0E0"
+                                BorderThickness="1"
+                                Background="#FF242424"
+                                CornerRadius="4">
+                            <controls:RoomTilesetPickerView RenderOptions.BitmapInterpolationMode="None" />
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Border Grid.Column="1"
+                Padding="12"
+                BorderBrush="#FFD6D6D6"
+                BorderThickness="1"
+                Background="#FFFDFDFD"
+                CornerRadius="4">
+            <Grid RowDefinitions="Auto,*"
+                  RowSpacing="12">
+                <Border Padding="10"
+                        BorderBrush="#FFE0E0E0"
+                        BorderThickness="1"
+                        Background="#FFF5F5F5"
+                        CornerRadius="4">
+                    <Grid ColumnDefinitions="Auto,60,10,Auto,60,18,Auto,Auto,Auto,Auto,Auto"
+                          ColumnSpacing="8">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="H Snap" />
+                        <TextBox Grid.Column="1"
+                                 Text="{Binding HSnap}" />
+
+                        <TextBlock Grid.Column="3"
+                                   VerticalAlignment="Center"
+                                   Text="V Snap" />
+                        <TextBox Grid.Column="4"
+                                 Text="{Binding VSnap}" />
+
+                        <ToggleButton Grid.Column="6"
+                                      Classes="room-toolbar-toggle"
+                                      IsChecked="{Binding ShowColour}"
+                                      ToolTip.Tip="Show Room Colour">
+                            <Image Width="16"
+                                   Height="16"
+                                   Stretch="Uniform">
+                                <Image.Source>
+                                    <svg:SvgImage Source="/Assets/Icons/Fluent/Room/color-fill.svg" />
+                                </Image.Source>
+                            </Image>
+                        </ToggleButton>
+
+                        <ToggleButton Grid.Column="7"
+                                      Classes="room-toolbar-toggle"
+                                      IsChecked="{Binding ShowGrid}"
+                                      ToolTip.Tip="Show Grid">
+                            <Image Width="16"
+                                   Height="16"
+                                   Stretch="Uniform">
+                                <Image.Source>
+                                    <svg:SvgImage Source="/Assets/Icons/Fluent/Tree/grid.svg" />
+                                </Image.Source>
+                            </Image>
+                        </ToggleButton>
+
+                        <ToggleButton Grid.Column="8"
+                                      Classes="room-toolbar-toggle"
+                                      IsChecked="{Binding ShowObjects}"
+                                      ToolTip.Tip="Show Objects">
+                            <Image Width="16"
+                                   Height="16"
+                                   Stretch="Uniform">
+                                <Image.Source>
+                                    <svg:SvgImage Source="/Assets/Icons/Fluent/Tree/cube.svg" />
+                                </Image.Source>
+                            </Image>
+                        </ToggleButton>
+
+                        <ToggleButton Grid.Column="9"
+                                      Classes="room-toolbar-toggle"
+                                      IsChecked="{Binding ShowTiles}"
+                                      ToolTip.Tip="Show Tiles">
+                            <Image Width="16"
+                                   Height="16"
+                                   Stretch="Uniform">
+                                <Image.Source>
+                                    <svg:SvgImage Source="/Assets/Icons/Fluent/Tree/grid.svg" />
+                                </Image.Source>
+                            </Image>
+                        </ToggleButton>
+
+                        <ToggleButton Grid.Column="10"
+                                      Classes="room-toolbar-toggle"
+                                      IsChecked="{Binding ShowBackgrounds}"
+                                      ToolTip.Tip="Show Backgrounds">
+                            <Image Width="16"
+                                   Height="16"
+                                   Stretch="Uniform">
+                                <Image.Source>
+                                    <svg:SvgImage Source="/Assets/Icons/Fluent/Tree/image.svg" />
+                                </Image.Source>
+                            </Image>
+                        </ToggleButton>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="1"
+                        BorderBrush="#FFCDCDCD"
+                        BorderThickness="1"
+                        Background="#FF2A2A2A"
+                        CornerRadius="4"
+                        ClipToBounds="True">
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Auto">
+                        <controls:RoomCanvasView Width="{Binding CanvasWidth}"
+                                                 Height="{Binding CanvasHeight}"
+                                                 RenderOptions.BitmapInterpolationMode="None" />
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

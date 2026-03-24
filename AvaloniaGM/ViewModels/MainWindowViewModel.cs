@@ -185,6 +185,13 @@ namespace AvaloniaGM.ViewModels
             {
                 SetSelectionState(root, treeItem.TreePathKey);
             }
+
+            foreach (var roomEditor in OpenTabs
+                         .Select(static tab => tab.EditorContent)
+                         .OfType<RoomEditorViewModel>())
+            {
+                roomEditor.NotifyPlacementSourceChanged();
+            }
         }
 
         public void ToggleTreeItemExpansion(ResourceTreeItemViewModel treeItem)
@@ -440,6 +447,10 @@ namespace AvaloniaGM.ViewModels
                     => new FontEditorViewModel(font),
                 ProjectResourceKind.Object when resource is GameObject gameObject
                     => new ObjectEditorViewModel(EnsureCurrentProject(), gameObject, RefreshResourceVisuals, AppendOutput),
+                ProjectResourceKind.Timeline when resource is Timeline timeline
+                    => new TimelineEditorViewModel(timeline, AppendOutput),
+                ProjectResourceKind.Room when resource is Room room
+                    => new RoomEditorViewModel(EnsureCurrentProject(), room, AppendOutput, GetSelectedTreeObjectForRoomPlacement),
                 ProjectResourceKind.Background when resource is Background background
                     => new BackgroundEditorViewModel(background, RefreshResourceVisuals, AppendOutput),
                 _ => new ResourceSummaryEditorViewModel(
@@ -489,6 +500,19 @@ namespace AvaloniaGM.ViewModels
                 ProjectResourceKind.Extension => "Extension Resource",
                 _ => "Resource"
             };
+        }
+
+        private GameObject? GetSelectedTreeObjectForRoomPlacement()
+        {
+            if (string.IsNullOrWhiteSpace(_selectedTreeItemKey))
+            {
+                return null;
+            }
+
+            var selectedTreeItem = FindTreeItemByPathKey(_selectedTreeItemKey);
+            return selectedTreeItem?.Kind == ProjectResourceKind.Object
+                ? selectedTreeItem.Resource as GameObject
+                : null;
         }
 
         private static string BuildResourceSummary(ProjectResourceKind kind, Resource resource)

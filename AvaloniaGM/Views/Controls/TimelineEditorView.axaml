@@ -1,0 +1,131 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AvaloniaGM.ViewModels"
+             xmlns:controls="using:AvaloniaGM.Views.Controls"
+             x:Class="AvaloniaGM.Views.Controls.TimelineEditorView"
+             x:DataType="vm:TimelineEditorViewModel">
+
+    <Grid ColumnDefinitions="280,*"
+          Margin="12">
+        <Border Grid.Column="0"
+                Margin="0,0,12,0"
+                Padding="14"
+                BorderBrush="#FFD6D6D6"
+                BorderThickness="1"
+                Background="#FFFBFBFB"
+                CornerRadius="4">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="12"
+                            Margin="0,0,20,0">
+                    <TextBlock Text="Timeline Properties"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+
+                    <Grid ColumnDefinitions="Auto,*"
+                          RowDefinitions="Auto,Auto"
+                          ColumnSpacing="10"
+                          RowSpacing="8">
+                        <TextBlock Grid.Row="0"
+                                   VerticalAlignment="Center"
+                                   Text="Name" />
+                        <TextBox Grid.Row="0"
+                                 Grid.Column="1"
+                                 IsReadOnly="True"
+                                 Text="{Binding Name}" />
+
+                        <TextBlock Grid.Row="1"
+                                   VerticalAlignment="Center"
+                                   Text="Moment Count" />
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="1"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding MomentCount}" />
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Grid Grid.Column="1"
+              RowDefinitions="Auto,*"
+              RowSpacing="12">
+            <Border Padding="12"
+                    BorderBrush="#FFD6D6D6"
+                    BorderThickness="1"
+                    Background="#FFFDFDFD"
+                    CornerRadius="4">
+                <Grid ColumnDefinitions="Auto,88,12,Auto,88,12,Auto,12,Auto">
+                    <TextBlock VerticalAlignment="Center"
+                               Text="New Step" />
+                    <TextBox Grid.Column="1"
+                             Text="{Binding NewMomentStep}" />
+
+                    <TextBlock Grid.Column="3"
+                               VerticalAlignment="Center"
+                               Text="Selected Step" />
+                    <TextBox Grid.Column="4"
+                             IsEnabled="{Binding HasSelectedMoment}"
+                             Text="{Binding SelectedMomentStep}" />
+
+                    <Button Grid.Column="6"
+                            Command="{Binding AddMomentCommand}">
+                        Add Moment
+                    </Button>
+
+                    <Button Grid.Column="8"
+                            Command="{Binding RemoveSelectedMomentCommand}">
+                        Remove Selected
+                    </Button>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1"
+                  ColumnDefinitions="220,*"
+                  ColumnSpacing="12">
+                <Border Grid.Column="0"
+                        Padding="12"
+                        BorderBrush="#FFD6D6D6"
+                        BorderThickness="1"
+                        Background="#FFFDFDFD"
+                        CornerRadius="4">
+                    <Grid RowDefinitions="Auto,*">
+                        <TextBlock Text="Moments"
+                                   FontSize="18"
+                                   FontWeight="SemiBold" />
+
+                        <ListBox Grid.Row="1"
+                                 Margin="0,12,0,0"
+                                 ItemsSource="{Binding Moments}"
+                                 SelectedItem="{Binding SelectedMoment}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:TimelineMomentItemViewModel">
+                                    <Border Padding="4">
+                                        <TextBlock Text="{Binding DisplayName}"
+                                                   FontWeight="SemiBold" />
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Column="1">
+                    <Grid IsVisible="{Binding HasSelectedMoment}">
+                        <controls:GmlCodeEditorView DataContext="{Binding SelectedCodeDocument}" />
+                    </Grid>
+
+                    <Border BorderBrush="#FFD6D6D6"
+                            BorderThickness="1"
+                            Background="#FFF8F8F8"
+                            CornerRadius="4"
+                            IsVisible="{Binding HasNoSelectedMoment}">
+                        <TextBlock Text="No moment selected."
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Foreground="#FF666666" />
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

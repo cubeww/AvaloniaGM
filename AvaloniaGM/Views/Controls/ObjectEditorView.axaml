@@ -5,7 +5,7 @@
              x:Class="AvaloniaGM.Views.Controls.ObjectEditorView"
              x:DataType="vm:ObjectEditorViewModel">
 
-    <Grid ColumnDefinitions="360,*"
+    <Grid ColumnDefinitions="300,*"
           Margin="12">
         <Border Grid.Column="0"
                 Margin="0,0,12,0"
@@ -201,7 +201,7 @@
                     BorderThickness="1"
                     Background="#FFFDFDFD"
                     CornerRadius="4">
-                <Grid ColumnDefinitions="Auto,160,12,100,12,220,12,Auto,12,Auto"
+                <Grid ColumnDefinitions="Auto,150,8,Auto,8,88,12,Auto,12,Auto"
                       RowDefinitions="Auto,Auto"
                       RowSpacing="8">
                     <TextBlock VerticalAlignment="Center"
@@ -244,7 +244,7 @@
             </Border>
 
             <Grid Grid.Row="1"
-                  ColumnDefinitions="280,*"
+                  ColumnDefinitions="240,*"
                   ColumnSpacing="12">
                 <Border Grid.Column="0"
                         Padding="12"
@@ -263,14 +263,9 @@
                                  SelectedItem="{Binding SelectedEvent}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate x:DataType="vm:ObjectEventItemViewModel">
-                                    <Border Padding="8">
-                                        <StackPanel Spacing="4">
-                                            <TextBlock Text="{Binding DisplayName}"
-                                                       FontWeight="SemiBold" />
-                                            <TextBlock Text="{Binding ActionSummary}"
-                                                       Foreground="#FF666666"
-                                                       TextWrapping="Wrap" />
-                                        </StackPanel>
+                                    <Border Padding="4">
+                                        <TextBlock Text="{Binding DisplayName}"
+                                                   FontWeight="SemiBold" />
                                     </Border>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
@@ -278,54 +273,21 @@
                     </Grid>
                 </Border>
 
-                <Grid Grid.Column="1"
-                      RowDefinitions="Auto,*">
-                    <Border Padding="12"
-                            BorderBrush="#FFD6D6D6"
-                            BorderThickness="1"
-                            Background="#FFFDFDFD"
-                            CornerRadius="4">
-                        <Grid>
-                            <ContentControl Content="{Binding SelectedEvent}"
-                                            IsVisible="{Binding HasSelectedEvent}">
-                                <ContentControl.ContentTemplate>
-                                    <DataTemplate x:DataType="vm:ObjectEventItemViewModel">
-                                        <Grid ColumnDefinitions="Auto,*"
-                                              ColumnSpacing="10">
-                                            <TextBlock Text="Selected Event"
-                                                       VerticalAlignment="Center"
-                                                       FontWeight="SemiBold" />
-                                            <TextBlock Grid.Column="1"
-                                                       Text="{Binding DisplayName}"
-                                                       VerticalAlignment="Center" />
-                                        </Grid>
-                                    </DataTemplate>
-                                </ContentControl.ContentTemplate>
-                            </ContentControl>
-
-                            <TextBlock Text="Select or create an event to edit its code."
-                                       Foreground="#FF666666"
-                                       IsVisible="{Binding HasNoSelectedEvent}" />
-                        </Grid>
-                    </Border>
-
-                    <Grid Grid.Row="1"
-                          Margin="0,12,0,0">
-                        <Grid IsVisible="{Binding HasSelectedEvent}">
-                            <controls:GmlCodeEditorView DataContext="{Binding SelectedCodeDocument}" />
-                        </Grid>
-
-                        <Border BorderBrush="#FFD6D6D6"
-                                BorderThickness="1"
-                                Background="#FFF8F8F8"
-                                CornerRadius="4"
-                                IsVisible="{Binding HasNoSelectedEvent}">
-                            <TextBlock Text="No event selected."
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"
-                                       Foreground="#FF666666" />
-                        </Border>
+                <Grid Grid.Column="1">
+                    <Grid IsVisible="{Binding HasSelectedEvent}">
+                        <controls:GmlCodeEditorView DataContext="{Binding SelectedCodeDocument}" />
                     </Grid>
+
+                    <Border BorderBrush="#FFD6D6D6"
+                            BorderThickness="1"
+                            Background="#FFF8F8F8"
+                            CornerRadius="4"
+                            IsVisible="{Binding HasNoSelectedEvent}">
+                        <TextBlock Text="No event selected."
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Foreground="#FF666666" />
+                    </Border>
                 </Grid>
             </Grid>
         </Grid>

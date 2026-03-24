@@ -81,6 +81,14 @@
         <DataTemplate DataType="vm:ObjectEditorViewModel">
             <controls:ObjectEditorView />
         </DataTemplate>
+
+        <DataTemplate DataType="vm:TimelineEditorViewModel">
+            <controls:TimelineEditorView />
+        </DataTemplate>
+
+        <DataTemplate DataType="vm:RoomEditorViewModel">
+            <controls:RoomEditorView />
+        </DataTemplate>
     </Window.DataTemplates>
 
     <Window.Styles>
