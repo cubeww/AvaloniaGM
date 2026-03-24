@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using Avalonia.Media.Imaging;
 using GM = AvaloniaGM.Models;
@@ -95,10 +97,54 @@ public class DataWinSerializer
         data.GeneralInfo.FileName = data.Strings.MakeString(displayName);
         data.GeneralInfo.DisplayName = data.Strings.MakeString(displayName);
         data.GeneralInfo.Config = data.Strings.MakeString(configurationName);
-        data.GeneralInfo.DefaultWindowWidth = (uint)Math.Max(1, project.Rooms.FirstOrDefault()?.Width ?? 1024);
-        data.GeneralInfo.DefaultWindowHeight = (uint)Math.Max(1, project.Rooms.FirstOrDefault()?.Height ?? 768);
+        var (defaultWindowWidth, defaultWindowHeight) = GetFirstRoomWindowSize(project);
+        data.GeneralInfo.DefaultWindowWidth = defaultWindowWidth;
+        data.GeneralInfo.DefaultWindowHeight = defaultWindowHeight;
 
         data.Options.Info |= UndertaleOptions.OptionsFlags.CreationEventOrder;
+    }
+
+    private static (uint Width, uint Height) GetFirstRoomWindowSize(GM.Project project)
+    {
+        var room = project.Rooms.FirstOrDefault();
+        if (room is null)
+        {
+            return (1024, 768);
+        }
+
+        var minX = 0;
+        var minY = 0;
+        var maxX = room.Width;
+        var maxY = room.Height;
+        var firstVisibleView = true;
+
+        if (room.EnableViews)
+        {
+            foreach (var view in room.Views)
+            {
+                if (!view.Visible)
+                {
+                    continue;
+                }
+
+                if (firstVisibleView)
+                {
+                    minX = view.XPort;
+                    minY = view.YPort;
+                    maxX = view.XPort + view.WPort;
+                    maxY = view.YPort + view.HPort;
+                    firstVisibleView = false;
+                    continue;
+                }
+
+                minX = Math.Min(minX, view.XPort);
+                minY = Math.Min(minY, view.YPort);
+                maxX = Math.Max(maxX, view.XPort + view.WPort);
+                maxY = Math.Max(maxY, view.YPort + view.HPort);
+            }
+        }
+
+        return ((uint)Math.Max(1, maxX - minX), (uint)Math.Max(1, maxY - minY));
     }
 
     private static void ResetDefaultResources(UndertaleData data)
@@ -141,6 +187,13 @@ public class DataWinSerializer
         foreach (var sprite in sprites)
         {
             var size = GetSpriteSize(sprite);
+            var orderedFrames = sprite.Frames
+                .OrderBy(static frame => frame.Index)
+                .ToList();
+            var frameImages = orderedFrames
+                .Select(frame => CreateMaskSourceImage(frame.Bitmap))
+                .ToList();
+            var collisionBounds = GetSpriteCollisionBounds(sprite, size.Width, size.Height, frameImages);
             var undertaleSprite = new UndertaleSprite
             {
                 Name = data.Strings.MakeString(sprite.Name),
@@ -155,9 +208,9 @@ public class DataWinSerializer
                 OriginY = sprite.YOrigin,
             };
 
-            ApplySpriteMargins(undertaleSprite, sprite, size.Width, size.Height);
+            ApplySpriteMargins(undertaleSprite, size.Width, size.Height, collisionBounds);
 
-            foreach (var frame in sprite.Frames.OrderBy(static frame => frame.Index))
+            foreach (var frame in orderedFrames)
             {
                 var texturePageItem = CreateTexturePageItem(data, $"{sprite.Name}_{frame.Index}", frame.Bitmap, size.Width, size.Height);
                 if (texturePageItem is null)
@@ -179,7 +232,9 @@ public class DataWinSerializer
 
             for (var index = 0; index < maskCount; index++)
             {
-                undertaleSprite.CollisionMasks.Add(undertaleSprite.NewMaskEntry(data));
+                var maskEntry = undertaleSprite.NewMaskEntry(data);
+                PopulateSpriteMask(maskEntry, sprite, size.Width, size.Height, collisionBounds, frameImages, index, maskCount);
+                undertaleSprite.CollisionMasks.Add(maskEntry);
             }
 
             data.Sprites.Add(undertaleSprite);
@@ -305,19 +360,25 @@ public class DataWinSerializer
     {
         foreach (var shader in shaders)
         {
+            var shaderType = MapShaderType(shader.ProjectType);
+            var vertexSource = shader.VertexSource ?? string.Empty;
+            var fragmentSource = shader.FragmentSource ?? string.Empty;
+            var shaderTexts = BuildShaderTexts(shaderType, shader.Name, vertexSource, fragmentSource);
             var shaderEntry = new UndertaleShader
             {
                 Name = data.Strings.MakeString(shader.Name),
-                Type = MapShaderType(shader.ProjectType),
-                GLSL_ES_Vertex = data.Strings.MakeString(shader.VertexSource ?? string.Empty),
-                GLSL_ES_Fragment = data.Strings.MakeString(shader.FragmentSource ?? string.Empty),
-                GLSL_Vertex = data.Strings.MakeString(string.Empty),
-                GLSL_Fragment = data.Strings.MakeString(string.Empty),
-                HLSL9_Vertex = data.Strings.MakeString(string.Empty),
-                HLSL9_Fragment = data.Strings.MakeString(string.Empty),
+                Type = shaderType,
+                GLSL_ES_Vertex = data.Strings.MakeString(shaderTexts.GlslEsVertex),
+                GLSL_ES_Fragment = data.Strings.MakeString(shaderTexts.GlslEsFragment),
+                GLSL_Vertex = data.Strings.MakeString(shaderTexts.GlslVertex),
+                GLSL_Fragment = data.Strings.MakeString(shaderTexts.GlslFragment),
+                HLSL9_Vertex = data.Strings.MakeString(shaderTexts.Hlsl9Vertex),
+                HLSL9_Fragment = data.Strings.MakeString(shaderTexts.Hlsl9Fragment),
             };
 
-            foreach (var attributeName in EnumerateShaderAttributes(shader.VertexSource))
+            PopulateCompiledShaderData(shaderEntry, shaderType, shader.Name, vertexSource, fragmentSource);
+
+            foreach (var attributeName in EnumerateShaderAttributes(vertexSource))
             {
                 shaderEntry.VertexShaderAttributes.Add(new UndertaleShader.VertexShaderAttribute
                 {
@@ -854,7 +915,7 @@ public class DataWinSerializer
         return (Math.Max(1, width), Math.Max(1, height));
     }
 
-    private static void ApplySpriteMargins(UndertaleSprite undertaleSprite, GM.Sprite sprite, int width, int height)
+    private static void ApplySpriteMargins(UndertaleSprite undertaleSprite, int width, int height, SpriteCollisionBounds bounds)
     {
         if (width <= 0 || height <= 0)
         {
@@ -865,30 +926,240 @@ public class DataWinSerializer
             return;
         }
 
-        if (sprite.BoundingBoxMode == GM.SpriteBoundingBoxMode.Manual)
-        {
-            undertaleSprite.MarginLeft = Math.Clamp(sprite.BoundingBoxLeft, 0, width - 1);
-            undertaleSprite.MarginRight = Math.Clamp(sprite.BoundingBoxRight, 0, width - 1);
-            undertaleSprite.MarginTop = Math.Clamp(sprite.BoundingBoxTop, 0, height - 1);
-            undertaleSprite.MarginBottom = Math.Clamp(sprite.BoundingBoxBottom, 0, height - 1);
-            return;
-        }
-
-        undertaleSprite.MarginLeft = 0;
-        undertaleSprite.MarginTop = 0;
-        undertaleSprite.MarginRight = width - 1;
-        undertaleSprite.MarginBottom = height - 1;
+        undertaleSprite.MarginLeft = Math.Clamp(bounds.Left, 0, width - 1);
+        undertaleSprite.MarginRight = Math.Clamp(bounds.Right, 0, width - 1);
+        undertaleSprite.MarginTop = Math.Clamp(bounds.Top, 0, height - 1);
+        undertaleSprite.MarginBottom = Math.Clamp(bounds.Bottom, 0, height - 1);
     }
 
     private static UndertaleSprite.SepMaskType MapCollisionKind(GM.SpriteCollisionKind collisionKind)
     {
         return collisionKind switch
         {
-            GM.SpriteCollisionKind.Precise or GM.SpriteCollisionKind.PrecisePerFrame => UndertaleSprite.SepMaskType.Precise,
+            GM.SpriteCollisionKind.Precise or
+            GM.SpriteCollisionKind.PrecisePerFrame or
+            GM.SpriteCollisionKind.Ellipse or
+            GM.SpriteCollisionKind.Diamond => UndertaleSprite.SepMaskType.Precise,
             GM.SpriteCollisionKind.RotatedRectangle => UndertaleSprite.SepMaskType.RotatedRect,
             _ => UndertaleSprite.SepMaskType.AxisAlignedRect,
         };
     }
+
+    private static GMImage? CreateMaskSourceImage(Bitmap? bitmap)
+    {
+        if (bitmap is null)
+        {
+            return null;
+        }
+
+        using var stream = new MemoryStream();
+        bitmap.Save(stream);
+        return GMImage.FromPng(stream.ToArray()).ConvertToFormat(GMImage.ImageFormat.RawBgra);
+    }
+
+    private static SpriteCollisionBounds GetSpriteCollisionBounds(
+        GM.Sprite sprite,
+        int width,
+        int height,
+        IReadOnlyList<GMImage?> frameImages)
+    {
+        if (width <= 0 || height <= 0)
+        {
+            return new SpriteCollisionBounds(0, 0, 0, 0);
+        }
+
+        if (sprite.BoundingBoxMode == GM.SpriteBoundingBoxMode.FullImage)
+        {
+            return new SpriteCollisionBounds(0, 0, width - 1, height - 1);
+        }
+
+        if (sprite.BoundingBoxMode == GM.SpriteBoundingBoxMode.Manual)
+        {
+            return new SpriteCollisionBounds(
+                Math.Clamp(sprite.BoundingBoxLeft, 0, width - 1),
+                Math.Clamp(sprite.BoundingBoxTop, 0, height - 1),
+                Math.Clamp(sprite.BoundingBoxRight, 0, width - 1),
+                Math.Clamp(sprite.BoundingBoxBottom, 0, height - 1));
+        }
+
+        return new SpriteCollisionBounds(
+            Math.Clamp(sprite.BoundingBoxLeft, 0, width - 1),
+            Math.Clamp(sprite.BoundingBoxTop, 0, height - 1),
+            Math.Clamp(sprite.BoundingBoxRight, 0, width - 1),
+            Math.Clamp(sprite.BoundingBoxBottom, 0, height - 1));
+    }
+
+    private static void PopulateSpriteMask(
+        UndertaleSprite.MaskEntry maskEntry,
+        GM.Sprite sprite,
+        int width,
+        int height,
+        SpriteCollisionBounds bounds,
+        IReadOnlyList<GMImage?> frameImages,
+        int maskIndex,
+        int maskCount)
+    {
+        if (maskEntry.Data.Length == 0 || width <= 0 || height <= 0)
+        {
+            return;
+        }
+
+        var mergedPixels = new bool[width * height];
+        var startFrame = maskCount == 1 ? 0 : Math.Clamp(maskIndex, 0, frameImages.Count - 1);
+        var endFrame = maskCount == 1 ? frameImages.Count : Math.Min(frameImages.Count, startFrame + 1);
+
+        for (var frameIndex = startFrame; frameIndex < endFrame; frameIndex++)
+        {
+            MergeFrameMask(mergedPixels, sprite, frameImages[frameIndex], width, height, bounds);
+        }
+
+        WriteMaskBits(maskEntry.Data, mergedPixels, width, height);
+    }
+
+    private static void MergeFrameMask(
+        bool[] mergedPixels,
+        GM.Sprite sprite,
+        GMImage? image,
+        int width,
+        int height,
+        SpriteCollisionBounds bounds)
+    {
+        switch (sprite.CollisionKind)
+        {
+            case GM.SpriteCollisionKind.Precise:
+            case GM.SpriteCollisionKind.PrecisePerFrame:
+                MergePreciseMask(mergedPixels, image, width, height, bounds, (int)Math.Clamp(sprite.CollisionTolerance, 0u, 255u));
+                break;
+
+            case GM.SpriteCollisionKind.Ellipse:
+                FillEllipseMask(mergedPixels, width, height, bounds);
+                break;
+
+            case GM.SpriteCollisionKind.Diamond:
+                FillDiamondMask(mergedPixels, width, height, bounds);
+                break;
+
+            case GM.SpriteCollisionKind.Rectangle:
+            case GM.SpriteCollisionKind.RotatedRectangle:
+            case GM.SpriteCollisionKind.SpineMesh:
+            default:
+                FillRectangleMask(mergedPixels, width, height, bounds);
+                break;
+        }
+    }
+
+    private static void MergePreciseMask(
+        bool[] mergedPixels,
+        GMImage? image,
+        int width,
+        int height,
+        SpriteCollisionBounds bounds,
+        int tolerance)
+    {
+        if (image is null)
+        {
+            return;
+        }
+
+        var raw = image.GetRawImageData();
+        var minX = Math.Clamp(bounds.Left, 0, Math.Min(width, image.Width) - 1);
+        var maxX = Math.Clamp(bounds.Right, 0, Math.Min(width, image.Width) - 1);
+        var minY = Math.Clamp(bounds.Top, 0, Math.Min(height, image.Height) - 1);
+        var maxY = Math.Clamp(bounds.Bottom, 0, Math.Min(height, image.Height) - 1);
+        for (var y = minY; y <= maxY; y++)
+        {
+            for (var x = minX; x <= maxX; x++)
+            {
+                var pixelOffset = ((y * image.Width) + x) * 4;
+                if (raw[pixelOffset + 3] > tolerance)
+                {
+                    mergedPixels[(y * width) + x] = true;
+                }
+            }
+        }
+    }
+
+    private static void FillRectangleMask(bool[] mergedPixels, int width, int height, SpriteCollisionBounds bounds)
+    {
+        for (var y = bounds.Top; y <= bounds.Bottom && y < height; y++)
+        {
+            for (var x = bounds.Left; x <= bounds.Right && x < width; x++)
+            {
+                mergedPixels[(y * width) + x] = true;
+            }
+        }
+    }
+
+    private static void FillEllipseMask(bool[] mergedPixels, int width, int height, SpriteCollisionBounds bounds)
+    {
+        var left = bounds.Left;
+        var top = bounds.Top;
+        var rightExclusive = bounds.Right + 1;
+        var bottomExclusive = bounds.Bottom + 1;
+        var centerX = (float)((left + (rightExclusive - 1)) / 2);
+        var centerY = (float)((bottomExclusive - 1 + top) / 2);
+        var radiusX = centerX - left + 0.5f;
+        var radiusY = centerY - top + 0.5f;
+
+        for (var y = top; y < bottomExclusive && y < height; y++)
+        {
+            for (var x = left; x < rightExclusive && x < width; x++)
+            {
+                if (radiusX > 0f &&
+                    radiusY > 0f &&
+                    Math.Pow((x - centerX) / radiusX, 2.0) + Math.Pow((y - centerY) / radiusY, 2.0) <= 1.0)
+                {
+                    mergedPixels[(y * width) + x] = true;
+                }
+            }
+        }
+    }
+
+    private static void FillDiamondMask(bool[] mergedPixels, int width, int height, SpriteCollisionBounds bounds)
+    {
+        var left = bounds.Left;
+        var top = bounds.Top;
+        var rightExclusive = bounds.Right + 1;
+        var bottomExclusive = bounds.Bottom + 1;
+        var centerX = (float)((left + (rightExclusive - 1)) / 2);
+        var centerY = (float)((bottomExclusive - 1 + top) / 2);
+        var radiusX = centerX - left + 0.5f;
+        var radiusY = centerY - top + 0.5f;
+
+        for (var y = top; y < bottomExclusive && y < height; y++)
+        {
+            for (var x = left; x < rightExclusive && x < width; x++)
+            {
+                if (radiusX > 0f &&
+                    radiusY > 0f &&
+                    Math.Abs((x - centerX) / radiusX) + Math.Abs((y - centerY) / radiusY) <= 1f)
+                {
+                    mergedPixels[(y * width) + x] = true;
+                }
+            }
+        }
+    }
+
+    private static void WriteMaskBits(byte[] output, bool[] pixels, int width, int height)
+    {
+        Array.Clear(output, 0, output.Length);
+        var rowStride = (width + 7) / 8;
+        for (var y = 0; y < height; y++)
+        {
+            var rowOffset = y * rowStride;
+            for (var x = 0; x < width; x++)
+            {
+                if (!pixels[(y * width) + x])
+                {
+                    continue;
+                }
+
+                output[rowOffset + (x / 8)] |= (byte)(1 << (7 - (x % 8)));
+            }
+        }
+    }
+
+    private readonly record struct SpriteCollisionBounds(int Left, int Top, int Right, int Bottom);
 
     private static string NormalizeSoundExtension(string? extension, string? originalName)
     {
@@ -964,6 +1235,354 @@ public class DataWinSerializer
         };
     }
 
+    private static ShaderTexts BuildShaderTexts(
+        UndertaleShader.ShaderType shaderType,
+        string shaderName,
+        string preparedVertexSource,
+        string preparedFragmentSource)
+    {
+        return shaderType switch
+        {
+            UndertaleShader.ShaderType.GLSL_ES => BuildGlslEsShaderTexts(shaderName, preparedVertexSource, preparedFragmentSource),
+            UndertaleShader.ShaderType.GLSL => new ShaderTexts(
+                string.Empty,
+                string.Empty,
+                GlslVertexPrefix + LoadShaderCompilerTextFile("VShaderCommon.shader") + ShaderDefineGlsl + RestoreCombinedShaderVertexSpacing(preparedVertexSource),
+                GlslFragmentPrefix + LoadShaderCompilerTextFile("FShaderCommon.shader") + ShaderDefineGlsl + preparedFragmentSource,
+                string.Empty,
+                string.Empty),
+            UndertaleShader.ShaderType.HLSL9 => new ShaderTexts(
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                LoadShaderCompilerTextFile("HLSL9_VShaderCommon.shader") + preparedVertexSource,
+                LoadShaderCompilerTextFile("HLSL9_PShaderCommon.shader") + preparedFragmentSource),
+            _ => new ShaderTexts(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty),
+        };
+    }
+
+    private static void PopulateCompiledShaderData(
+        UndertaleShader shaderEntry,
+        UndertaleShader.ShaderType shaderType,
+        string shaderName,
+        string preparedVertexSource,
+        string preparedFragmentSource)
+    {
+        switch (shaderType)
+        {
+            case UndertaleShader.ShaderType.HLSL11:
+            {
+                var (vertexData, pixelData) = CompileHlsl11(shaderName, preparedVertexSource, preparedFragmentSource);
+                AssignRawShaderData(shaderEntry.HLSL11_VertexData, vertexData);
+                AssignRawShaderData(shaderEntry.HLSL11_PixelData, pixelData);
+                break;
+            }
+        }
+    }
+
+    private static void AssignRawShaderData(UndertaleShader.UndertaleRawShaderData target, byte[] data)
+    {
+        target.Data = data;
+        target.IsNull = data.Length == 0;
+    }
+
+    private static ShaderTexts BuildGlslEsShaderTexts(
+        string shaderName,
+        string preparedVertexSource,
+        string preparedFragmentSource)
+    {
+        var (compiledHlsl9Vertex, compiledHlsl9Fragment) = CompileHlsl9FromGlslEs(shaderName, preparedVertexSource, preparedFragmentSource);
+        return new ShaderTexts(
+            GlslEsVertexPrefix + LoadShaderCompilerTextFile("VShaderCommon.shader") + ShaderDefineGlslEs + RestoreCombinedShaderVertexSpacing(preparedVertexSource),
+            GlslEsFragmentPrefix + LoadShaderCompilerTextFile("FShaderCommon.shader") + ShaderDefineGlslEs + preparedFragmentSource,
+            GlslVertexPrefix + LoadShaderCompilerTextFile("VShaderCommon.shader") + ShaderDefineGlsl + RestoreCombinedShaderVertexSpacing(preparedVertexSource),
+            GlslFragmentPrefix + LoadShaderCompilerTextFile("FShaderCommon.shader") + ShaderDefineGlsl + preparedFragmentSource,
+            LoadShaderCompilerTextFile("HLSL9_VShaderCommon.shader") + compiledHlsl9Vertex,
+            LoadShaderCompilerTextFile("HLSL9_PShaderCommon.shader") + compiledHlsl9Fragment);
+    }
+
+    private static (string VertexShader, string PixelShader) CompileHlsl9FromGlslEs(
+        string shaderName,
+        string preparedVertexSource,
+        string preparedFragmentSource)
+    {
+        var compilerDirectory = ResolveShaderCompilerDirectory();
+        var tempDirectory = CreateShaderTempDirectory(shaderName);
+
+        try
+        {
+            var shaderFilePath = WriteCombinedShaderFile(tempDirectory, shaderName, preparedVertexSource, preparedFragmentSource);
+            var outputVertexShaderPath = Path.Combine(tempDirectory, "vout.shader");
+            var outputFragmentShaderPath = Path.Combine(tempDirectory, "fout.shader");
+
+            RunShaderCompilerProcess(
+                Path.Combine(compilerDirectory, "HLSLCompiler.exe"),
+                new[]
+                {
+                    "-shader", shaderFilePath,
+                    "-name", BuildShaderCompilerEntryName(shaderName),
+                    "-out", tempDirectory,
+                    "-preamble", compilerDirectory,
+                    "-typedefine", ShaderDefineHlsl9.TrimEnd('\r', '\n'),
+                },
+                tempDirectory,
+                shaderName,
+                "GLSLES to HLSL9 translation");
+
+            return (File.ReadAllText(outputVertexShaderPath), File.ReadAllText(outputFragmentShaderPath));
+        }
+        finally
+        {
+            TryDeleteDirectory(tempDirectory);
+        }
+    }
+
+    private static (byte[] VertexData, byte[] PixelData) CompileHlsl11(
+        string shaderName,
+        string preparedVertexSource,
+        string preparedFragmentSource)
+    {
+        var compilerDirectory = ResolveShaderCompilerDirectory();
+        var tempDirectory = CreateShaderTempDirectory(shaderName);
+
+        try
+        {
+            var shaderFilePath = WriteCombinedShaderFile(tempDirectory, shaderName, preparedVertexSource, preparedFragmentSource);
+            var vertexDataPath = Path.Combine(tempDirectory, "vout.shdata");
+            var pixelDataPath = Path.Combine(tempDirectory, "fout.shdata");
+
+            RunShaderCompilerProcess(
+                Path.Combine(compilerDirectory, "D3D11ShaderParser.exe"),
+                new[]
+                {
+                    "-quiet",
+                    "-combinedshader",
+                    "-profilev", "vs_auto",
+                    "-profilep", "ps_auto",
+                    "-preamble", compilerDirectory,
+                    "-shader", shaderFilePath,
+                    "-outv", vertexDataPath,
+                    "-outp", pixelDataPath,
+                    "-name", BuildShaderCompilerEntryName(shaderName),
+                },
+                tempDirectory,
+                shaderName,
+                "HLSL11 compilation");
+
+            return (File.ReadAllBytes(vertexDataPath), File.ReadAllBytes(pixelDataPath));
+        }
+        finally
+        {
+            TryDeleteDirectory(tempDirectory);
+        }
+    }
+
+    private static string ResolveShaderCompilerDirectory()
+    {
+        foreach (var candidate in EnumerateShaderCompilerDirectories())
+        {
+            if (Directory.Exists(candidate) &&
+                File.Exists(Path.Combine(candidate, "HLSLCompiler.exe")) &&
+                File.Exists(Path.Combine(candidate, "D3D11ShaderParser.exe")))
+            {
+                return candidate;
+            }
+        }
+
+        throw new InvalidOperationException("Shader compiler tools were not found. Expected a ShaderCompiler folder beside the application output.");
+    }
+
+    private static IEnumerable<string> EnumerateShaderCompilerDirectories()
+    {
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        static IEnumerable<string> EnumerateCandidatesFromBase(string? baseDirectory)
+        {
+            if (string.IsNullOrWhiteSpace(baseDirectory))
+            {
+                yield break;
+            }
+
+            yield return Path.Combine(baseDirectory, "ShaderCompiler");
+
+            var current = new DirectoryInfo(baseDirectory);
+            for (var depth = 0; depth < 8 && current is not null; depth++, current = current.Parent)
+            {
+                yield return Path.Combine(current.FullName, "ShaderCompiler");
+                yield return Path.Combine(current.FullName, "AvaloniaGM", "ShaderCompiler");
+            }
+        }
+
+        foreach (var candidate in EnumerateCandidatesFromBase(AppContext.BaseDirectory))
+        {
+            if (seen.Add(candidate))
+            {
+                yield return candidate;
+            }
+        }
+
+        var assemblyDirectory = Path.GetDirectoryName(typeof(DataWinSerializer).Assembly.Location);
+        foreach (var candidate in EnumerateCandidatesFromBase(assemblyDirectory))
+        {
+            if (seen.Add(candidate))
+            {
+                yield return candidate;
+            }
+        }
+    }
+
+    private static string LoadShaderCompilerTextFile(string fileName)
+    {
+        var path = Path.Combine(ResolveShaderCompilerDirectory(), fileName);
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException($"Required shader compiler file was not found: {fileName}", path);
+        }
+
+        return File.ReadAllText(path);
+    }
+
+    private static string RestoreCombinedShaderVertexSpacing(string vertexSource)
+    {
+        if (string.IsNullOrEmpty(vertexSource))
+        {
+            return string.Empty;
+        }
+
+        if (vertexSource.EndsWith("\r\n\r\n", StringComparison.Ordinal) ||
+            vertexSource.EndsWith("\n\n", StringComparison.Ordinal))
+        {
+            return vertexSource;
+        }
+
+        if (vertexSource.EndsWith("\r\n", StringComparison.Ordinal))
+        {
+            return vertexSource + "\r\n";
+        }
+
+        if (vertexSource.EndsWith("\n", StringComparison.Ordinal))
+        {
+            return vertexSource + "\n";
+        }
+
+        return vertexSource + "\r\n\r\n";
+    }
+
+    private static string CreateShaderTempDirectory(string shaderName)
+    {
+        var safeName = SanitizeFileName(shaderName);
+        var directory = Path.Combine(Path.GetTempPath(), "AvaloniaGM", "ShaderCompile", $"{safeName}_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        return directory;
+    }
+
+    private static string WriteCombinedShaderFile(
+        string tempDirectory,
+        string shaderName,
+        string preparedVertexSource,
+        string preparedFragmentSource)
+    {
+        var path = Path.Combine(tempDirectory, $"{SanitizeFileName(shaderName)}.shader");
+        var combinedSource = string.Concat(
+            preparedVertexSource,
+            Environment.NewLine,
+            GM.Shader.SplitMarker,
+            Environment.NewLine,
+            preparedFragmentSource,
+            Environment.NewLine);
+        File.WriteAllText(path, combinedSource, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        return path;
+    }
+
+    private static string SanitizeFileName(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "shader";
+        }
+
+        var invalidCharacters = Path.GetInvalidFileNameChars();
+        var builder = new StringBuilder(value.Length);
+        foreach (var character in value)
+        {
+            builder.Append(invalidCharacters.Contains(character) ? '_' : character);
+        }
+
+        return builder.Length == 0 ? "shader" : builder.ToString();
+    }
+
+    private static string BuildShaderCompilerEntryName(string shaderName)
+    {
+        return "Shader_" + Path.GetFileNameWithoutExtension(SanitizeFileName(shaderName));
+    }
+
+    private static void RunShaderCompilerProcess(
+        string executablePath,
+        IEnumerable<string> arguments,
+        string workingDirectory,
+        string shaderName,
+        string stepName)
+    {
+        if (!File.Exists(executablePath))
+        {
+            throw new FileNotFoundException($"Required shader compiler executable was not found for {stepName}.", executablePath);
+        }
+
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = executablePath,
+            UseShellExecute = false,
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
+            WorkingDirectory = workingDirectory,
+        };
+
+        foreach (var argument in arguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        using var process = Process.Start(startInfo)
+            ?? throw new InvalidOperationException($"Unable to start shader compiler process for {stepName}.");
+        var standardOutput = process.StandardOutput.ReadToEnd();
+        var standardError = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+
+        if (process.ExitCode == 0)
+        {
+            return;
+        }
+
+        var message = string.Join(
+            Environment.NewLine,
+            new[]
+            {
+                $"Shader compilation failed for '{shaderName}' during {stepName}.",
+                $"Executable: {executablePath}",
+                $"Exit code: {process.ExitCode}",
+                string.IsNullOrWhiteSpace(standardOutput) ? string.Empty : "Output:" + Environment.NewLine + standardOutput.Trim(),
+                string.IsNullOrWhiteSpace(standardError) ? string.Empty : "Error:" + Environment.NewLine + standardError.Trim(),
+            }.Where(static part => !string.IsNullOrWhiteSpace(part)));
+        throw new InvalidOperationException(message);
+    }
+
+    private static void TryDeleteDirectory(string path)
+    {
+        if (!Directory.Exists(path))
+        {
+            return;
+        }
+
+        try
+        {
+            Directory.Delete(path, recursive: true);
+        }
+        catch
+        {
+        }
+    }
+
     private static IEnumerable<string> EnumerateShaderAttributes(string? vertexSource)
     {
         if (string.IsNullOrWhiteSpace(vertexSource))
@@ -981,6 +1600,23 @@ public class DataWinSerializer
             }
         }
     }
+
+    private const string GlslEsFragmentPrefix = "precision mediump float;\n#define LOWPREC lowp\n";
+    private const string GlslEsVertexPrefix = "#define LOWPREC lowp\n";
+    private const string GlslFragmentPrefix = "#version 120\n#define LOWPREC \n";
+    private const string GlslVertexPrefix = "#version 120\n#define LOWPREC \n";
+    private const string ShaderDefineGlslEs = "#define _YY_GLSLES_ 1\n";
+    private const string ShaderDefineGlsl = "#define _YY_GLSL_ 1\n";
+    private const string ShaderDefineHlsl9 = "#define _YY_HLSL9_ 1\n";
+    private const string ShaderDefineHlsl11 = "#define _YY_HLSL11_ 1\n";
+
+    private readonly record struct ShaderTexts(
+        string GlslEsVertex,
+        string GlslEsFragment,
+        string GlslVertex,
+        string GlslFragment,
+        string Hlsl9Vertex,
+        string Hlsl9Fragment);
 
     private static string BuildEventCode(IEnumerable<GM.GameObjectAction> actions)
     {
