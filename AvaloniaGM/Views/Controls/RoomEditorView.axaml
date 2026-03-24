@@ -35,7 +35,7 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid ColumnDefinitions="340,*"
+    <Grid ColumnDefinitions="400,*"
           Margin="12">
         <Border Grid.Column="0"
                 Margin="0,0,12,0"
@@ -139,6 +139,66 @@
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
+
+                        <Border Padding="10"
+                                BorderBrush="#FFE0E0E0"
+                                BorderThickness="1"
+                                Background="#FFF7F7F7"
+                                CornerRadius="4"
+                                IsVisible="{Binding HasSelectedInstance}">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Selected Instance"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding SelectedInstanceObjectName}"
+                                           Foreground="#FF666666" />
+
+                                <Grid ColumnDefinitions="Auto,*"
+                                      RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                                      ColumnSpacing="10"
+                                      RowSpacing="8">
+                                    <TextBlock Grid.Row="0"
+                                               VerticalAlignment="Center"
+                                               Text="X" />
+                                    <TextBox Grid.Row="0"
+                                             Grid.Column="1"
+                                             Text="{Binding SelectedInstanceX}" />
+
+                                    <TextBlock Grid.Row="1"
+                                               VerticalAlignment="Center"
+                                               Text="Y" />
+                                    <TextBox Grid.Row="1"
+                                             Grid.Column="1"
+                                             Text="{Binding SelectedInstanceY}" />
+
+                                    <TextBlock Grid.Row="2"
+                                               VerticalAlignment="Center"
+                                               Text="Scale X" />
+                                    <TextBox Grid.Row="2"
+                                             Grid.Column="1"
+                                             Text="{Binding SelectedInstanceScaleX}" />
+
+                                    <TextBlock Grid.Row="3"
+                                               VerticalAlignment="Center"
+                                               Text="Scale Y" />
+                                    <TextBox Grid.Row="3"
+                                             Grid.Column="1"
+                                             Text="{Binding SelectedInstanceScaleY}" />
+
+                                    <TextBlock Grid.Row="4"
+                                               VerticalAlignment="Center"
+                                               Text="Rotation" />
+                                    <TextBox Grid.Row="4"
+                                             Grid.Column="1"
+                                             Text="{Binding SelectedInstanceRotation}" />
+                                </Grid>
+
+                                <TextBlock Text="Creation Code"
+                                           FontWeight="SemiBold" />
+
+                                <controls:GmlCodeEditorView Height="220"
+                                                            DataContext="{Binding SelectedInstanceCodeDocument}" />
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
 
                     <StackPanel Spacing="10"
@@ -201,7 +261,303 @@
                                 CornerRadius="4">
                             <controls:RoomTilesetPickerView RenderOptions.BitmapInterpolationMode="None" />
                         </Border>
+
+                        <Border Padding="10"
+                                BorderBrush="#FFE0E0E0"
+                                BorderThickness="1"
+                                Background="#FFF7F7F7"
+                                CornerRadius="4"
+                                IsVisible="{Binding HasSelectedTile}">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Selected Tile"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding SelectedTileBackgroundName}"
+                                           Foreground="#FF666666" />
+
+                                <Grid ColumnDefinitions="Auto,*"
+                                      RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                                      ColumnSpacing="10"
+                                      RowSpacing="8">
+                                    <TextBlock Grid.Row="0"
+                                               VerticalAlignment="Center"
+                                               Text="X" />
+                                    <TextBox Grid.Row="0"
+                                             Grid.Column="1"
+                                             Text="{Binding SelectedTileX}" />
+
+                                    <TextBlock Grid.Row="1"
+                                               VerticalAlignment="Center"
+                                               Text="Y" />
+                                    <TextBox Grid.Row="1"
+                                             Grid.Column="1"
+                                             Text="{Binding SelectedTileY}" />
+
+                                    <TextBlock Grid.Row="2"
+                                               VerticalAlignment="Center"
+                                               Text="Width" />
+                                    <TextBox Grid.Row="2"
+                                             Grid.Column="1"
+                                             Text="{Binding SelectedTileWidth}" />
+
+                                    <TextBlock Grid.Row="3"
+                                               VerticalAlignment="Center"
+                                               Text="Height" />
+                                    <TextBox Grid.Row="3"
+                                             Grid.Column="1"
+                                             Text="{Binding SelectedTileHeight}" />
+
+                                    <TextBlock Grid.Row="4"
+                                               VerticalAlignment="Center"
+                                               Text="Source X" />
+                                    <TextBox Grid.Row="4"
+                                             Grid.Column="1"
+                                             Text="{Binding SelectedTileSourceX}" />
+
+                                    <TextBlock Grid.Row="5"
+                                               VerticalAlignment="Center"
+                                               Text="Source Y" />
+                                    <TextBox Grid.Row="5"
+                                             Grid.Column="1"
+                                             Text="{Binding SelectedTileSourceY}" />
+
+                                    <TextBlock Grid.Row="6"
+                                               VerticalAlignment="Center"
+                                               Text="Scale X/Y" />
+                                    <Grid Grid.Row="6"
+                                          Grid.Column="1"
+                                          ColumnDefinitions="*,8,*">
+                                        <TextBox Text="{Binding SelectedTileScaleX}" />
+                                        <TextBox Grid.Column="2"
+                                                 Text="{Binding SelectedTileScaleY}" />
+                                    </Grid>
+
+                                    <TextBlock Grid.Row="7"
+                                               VerticalAlignment="Center"
+                                               Text="Depth" />
+                                    <TextBox Grid.Row="7"
+                                             Grid.Column="1"
+                                             Text="{Binding SelectedTileDepth}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
+
+                    <Expander Header="Background Layers"
+                              IsExpanded="True">
+                        <ItemsControl ItemsSource="{Binding RoomBackgroundSlots}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:RoomBackgroundSlotViewModel">
+                                    <Border Margin="0,0,0,8"
+                                            Padding="10"
+                                            BorderBrush="#FFE0E0E0"
+                                            BorderThickness="1"
+                                            Background="#FFF8F8F8"
+                                            CornerRadius="4">
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Text="{Binding Header}"
+                                                       FontWeight="SemiBold" />
+
+                                            <ComboBox ItemsSource="{Binding BackgroundOptions}"
+                                                      SelectedItem="{Binding BackgroundOption}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding DisplayName}" />
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+
+                                            <WrapPanel Orientation="Horizontal"
+                                                       ItemHeight="28"
+                                                       ItemWidth="130">
+                                                <CheckBox Content="Visible"
+                                                          IsChecked="{Binding Visible}" />
+                                                <CheckBox Content="Foreground"
+                                                          IsChecked="{Binding Foreground}" />
+                                                <CheckBox Content="H Tiled"
+                                                          IsChecked="{Binding HTiled}" />
+                                                <CheckBox Content="V Tiled"
+                                                          IsChecked="{Binding VTiled}" />
+                                                <CheckBox Content="Stretch"
+                                                          IsChecked="{Binding Stretch}" />
+                                            </WrapPanel>
+
+                                            <Grid ColumnDefinitions="Auto,*,Auto,*"
+                                                  RowDefinitions="Auto,Auto"
+                                                  ColumnSpacing="8"
+                                                  RowSpacing="8">
+                                                <TextBlock VerticalAlignment="Center"
+                                                           Text="X" />
+                                                <TextBox Grid.Column="1"
+                                                         Text="{Binding X}" />
+
+                                                <TextBlock Grid.Column="2"
+                                                           VerticalAlignment="Center"
+                                                           Text="Y" />
+                                                <TextBox Grid.Column="3"
+                                                         Text="{Binding Y}" />
+
+                                                <TextBlock Grid.Row="1"
+                                                           VerticalAlignment="Center"
+                                                           Text="H Speed" />
+                                                <TextBox Grid.Row="1"
+                                                         Grid.Column="1"
+                                                         Text="{Binding HSpeed}" />
+
+                                                <TextBlock Grid.Row="1"
+                                                           Grid.Column="2"
+                                                           VerticalAlignment="Center"
+                                                           Text="V Speed" />
+                                                <TextBox Grid.Row="1"
+                                                         Grid.Column="3"
+                                                         Text="{Binding VSpeed}" />
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Expander>
+
+                    <Expander Header="Views"
+                              IsExpanded="False">
+                        <StackPanel Spacing="8">
+                            <WrapPanel Orientation="Horizontal"
+                                       ItemHeight="28"
+                                       ItemWidth="150">
+                                <CheckBox Content="Enable Views"
+                                          IsChecked="{Binding EnableViews}" />
+                                <CheckBox Content="Clear Screen"
+                                          IsChecked="{Binding ViewClearScreen}" />
+                                <CheckBox Content="Clear Display Buffer"
+                                          IsChecked="{Binding ClearDisplayBuffer}" />
+                            </WrapPanel>
+
+                            <ItemsControl ItemsSource="{Binding RoomViewSlots}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:RoomViewSlotViewModel">
+                                        <Border Margin="0,0,0,8"
+                                                Padding="10"
+                                                BorderBrush="#FFE0E0E0"
+                                                BorderThickness="1"
+                                                Background="#FFF8F8F8"
+                                                CornerRadius="4">
+                                            <StackPanel Spacing="8">
+                                                <DockPanel>
+                                                    <TextBlock DockPanel.Dock="Left"
+                                                               Text="{Binding Header}"
+                                                               FontWeight="SemiBold" />
+                                                    <CheckBox DockPanel.Dock="Right"
+                                                              Content="Visible"
+                                                              IsChecked="{Binding Visible}" />
+                                                </DockPanel>
+
+                                                <ComboBox ItemsSource="{Binding FollowObjectOptions}"
+                                                          SelectedItem="{Binding FollowObjectOption}">
+                                                    <ComboBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding DisplayName}" />
+                                                        </DataTemplate>
+                                                    </ComboBox.ItemTemplate>
+                                                </ComboBox>
+
+                                                <Grid ColumnDefinitions="Auto,*,Auto,*"
+                                                      RowDefinitions="Auto,Auto,Auto,Auto"
+                                                      ColumnSpacing="8"
+                                                      RowSpacing="8">
+                                                    <TextBlock VerticalAlignment="Center"
+                                                               Text="X View" />
+                                                    <TextBox Grid.Column="1"
+                                                             Text="{Binding XView}" />
+
+                                                    <TextBlock Grid.Column="2"
+                                                               VerticalAlignment="Center"
+                                                               Text="Y View" />
+                                                    <TextBox Grid.Column="3"
+                                                             Text="{Binding YView}" />
+
+                                                    <TextBlock Grid.Row="1"
+                                                               VerticalAlignment="Center"
+                                                               Text="W View" />
+                                                    <TextBox Grid.Row="1"
+                                                             Grid.Column="1"
+                                                             Text="{Binding WView}" />
+
+                                                    <TextBlock Grid.Row="1"
+                                                               Grid.Column="2"
+                                                               VerticalAlignment="Center"
+                                                               Text="H View" />
+                                                    <TextBox Grid.Row="1"
+                                                             Grid.Column="3"
+                                                             Text="{Binding HView}" />
+
+                                                    <TextBlock Grid.Row="2"
+                                                               VerticalAlignment="Center"
+                                                               Text="X Port" />
+                                                    <TextBox Grid.Row="2"
+                                                             Grid.Column="1"
+                                                             Text="{Binding XPort}" />
+
+                                                    <TextBlock Grid.Row="2"
+                                                               Grid.Column="2"
+                                                               VerticalAlignment="Center"
+                                                               Text="Y Port" />
+                                                    <TextBox Grid.Row="2"
+                                                             Grid.Column="3"
+                                                             Text="{Binding YPort}" />
+
+                                                    <TextBlock Grid.Row="3"
+                                                               VerticalAlignment="Center"
+                                                               Text="W Port" />
+                                                    <TextBox Grid.Row="3"
+                                                             Grid.Column="1"
+                                                             Text="{Binding WPort}" />
+
+                                                    <TextBlock Grid.Row="3"
+                                                               Grid.Column="2"
+                                                               VerticalAlignment="Center"
+                                                               Text="H Port" />
+                                                    <TextBox Grid.Row="3"
+                                                             Grid.Column="3"
+                                                             Text="{Binding HPort}" />
+                                                </Grid>
+
+                                                <Grid ColumnDefinitions="Auto,*,Auto,*"
+                                                      RowDefinitions="Auto,Auto"
+                                                      ColumnSpacing="8"
+                                                      RowSpacing="8">
+                                                    <TextBlock VerticalAlignment="Center"
+                                                               Text="H Border" />
+                                                    <TextBox Grid.Column="1"
+                                                             Text="{Binding HBorder}" />
+
+                                                    <TextBlock Grid.Column="2"
+                                                               VerticalAlignment="Center"
+                                                               Text="V Border" />
+                                                    <TextBox Grid.Column="3"
+                                                             Text="{Binding VBorder}" />
+
+                                                    <TextBlock Grid.Row="1"
+                                                               VerticalAlignment="Center"
+                                                               Text="H Speed" />
+                                                    <TextBox Grid.Row="1"
+                                                             Grid.Column="1"
+                                                             Text="{Binding HSpeed}" />
+
+                                                    <TextBlock Grid.Row="1"
+                                                               Grid.Column="2"
+                                                               VerticalAlignment="Center"
+                                                               Text="V Speed" />
+                                                    <TextBox Grid.Row="1"
+                                                             Grid.Column="3"
+                                                             Text="{Binding VSpeed}" />
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Expander>
                 </StackPanel>
             </ScrollViewer>
         </Border>

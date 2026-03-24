@@ -21,11 +21,25 @@ public class RoomCanvasView : Control
     private static readonly IBrush HoverOutlineBrush = new SolidColorBrush(Color.Parse("#CC5FA8FF"));
     private static readonly IBrush HoverFillBrush = new SolidColorBrush(Color.Parse("#335FA8FF"));
     private static readonly IBrush EraseOutlineBrush = new SolidColorBrush(Color.Parse("#CCD65F5F"));
+    private static readonly IBrush SelectedOutlineBrush = new SolidColorBrush(Color.Parse("#FFF5C24B"));
+    private static readonly IBrush SelectedFillBrush = new SolidColorBrush(Color.Parse("#33F5C24B"));
     private static readonly Pen RoomOutlinePen = new(new SolidColorBrush(Color.Parse("#FF808080")), 1);
     private static readonly Pen GridPen = new(GridBrush, 1);
     private static readonly Pen HoverPen = new(HoverOutlineBrush, 1);
     private static readonly Pen ErasePen = new(EraseOutlineBrush, 1);
     private static readonly Pen PlaceholderPen = new(new SolidColorBrush(Color.Parse("#FF9DBBE8")), 1);
+    private static readonly Pen SelectedPen = new(SelectedOutlineBrush, 2);
+    private static readonly Color[] ViewOverlayColors =
+    [
+        Color.Parse("#FF52B6FF"),
+        Color.Parse("#FFFFA94D"),
+        Color.Parse("#FF7AD97A"),
+        Color.Parse("#FFF06A8A"),
+        Color.Parse("#FFD18CFF"),
+        Color.Parse("#FF57D3C8"),
+        Color.Parse("#FFFFD166"),
+        Color.Parse("#FF95A4FF"),
+    ];
 
     private RoomEditorViewModel? _viewModel;
     private Point? _hoverPoint;
@@ -72,6 +86,12 @@ public class RoomCanvasView : Control
 
         if (currentPoint.Properties.IsLeftButtonPressed)
         {
+            if (_viewModel.TrySelectTopmostAt(point))
+            {
+                e.Handled = true;
+                return;
+            }
+
             _isPrimaryDragging = true;
             _lastPrimaryAnchor = null;
             ApplyPrimary(point);
@@ -211,10 +231,14 @@ public class RoomCanvasView : Control
             }
         }
 
+        DrawSelection(context, viewModel, visibleRect);
+
         if (viewModel.ShowGrid)
         {
             DrawGrid(context, viewModel, visibleRect);
         }
+
+        DrawRoomViews(context, viewModel, visibleRect, roomRect);
 
         context.DrawRectangle(null, RoomOutlinePen, new Rect(0.5, 0.5, Math.Max(0, Bounds.Width - 1), Math.Max(0, Bounds.Height - 1)));
         DrawHoverPreview(context, viewModel);
@@ -397,6 +421,46 @@ public class RoomCanvasView : Control
         }
     }
 
+    private static void DrawRoomViews(DrawingContext context, RoomEditorViewModel viewModel, Rect visibleRect, Rect roomRect)
+    {
+        if (!viewModel.EnableViews)
+        {
+            return;
+        }
+
+        for (var index = 0; index < viewModel.ViewLayers.Count; index++)
+        {
+            var roomView = viewModel.ViewLayers[index];
+            if (!roomView.Visible)
+            {
+                continue;
+            }
+
+            var viewRect = new Rect(
+                roomView.XView,
+                roomView.YView,
+                Math.Max(1, roomView.WView),
+                Math.Max(1, roomView.HView));
+
+            if (!viewRect.Intersects(visibleRect))
+            {
+                continue;
+            }
+
+            var clippedRect = ClipRectToBounds(viewRect, roomRect);
+            if (clippedRect.Width <= 0 || clippedRect.Height <= 0)
+            {
+                continue;
+            }
+
+            var color = ViewOverlayColors[index % ViewOverlayColors.Length];
+            var fillBrush = new SolidColorBrush(Color.FromArgb(42, color.R, color.G, color.B));
+            var outlinePen = new Pen(new SolidColorBrush(color), 2);
+
+            context.DrawRectangle(fillBrush, outlinePen, AlignRectToPixel(clippedRect));
+        }
+    }
+
     private void DrawHoverPreview(DrawingContext context, RoomEditorViewModel viewModel)
     {
         if (_isMiddleDragging)
@@ -457,6 +521,50 @@ public class RoomCanvasView : Control
             context.DrawImage(tileBackground.Bitmap, sourceRect, tileRect);
         }
         context.DrawRectangle(HoverFillBrush, HoverPen, tileRect);
+    }
+
+    private static void DrawSelection(DrawingContext context, RoomEditorViewModel viewModel, Rect visibleRect)
+    {
+        if (viewModel.ActiveLayer == RoomEditLayer.Instances && viewModel.SelectedInstance is not null)
+        {
+            var bounds = RoomEditorViewModel.GetInstanceBounds(viewModel.SelectedInstance);
+            if (bounds.Intersects(visibleRect))
+            {
+                context.DrawRectangle(SelectedFillBrush, SelectedPen, bounds);
+            }
+
+            return;
+        }
+
+        if (viewModel.ActiveLayer == RoomEditLayer.Tiles && viewModel.SelectedTile is not null)
+        {
+            var bounds = RoomEditorViewModel.GetTileBounds(viewModel.SelectedTile);
+            if (bounds.Intersects(visibleRect))
+            {
+                context.DrawRectangle(SelectedFillBrush, SelectedPen, bounds);
+            }
+        }
+    }
+
+    private static Rect AlignRectToPixel(Rect rect)
+    {
+        return new Rect(
+            rect.X + 0.5,
+            rect.Y + 0.5,
+            Math.Max(0, rect.Width - 1),
+            Math.Max(0, rect.Height - 1));
+    }
+
+    private static Rect ClipRectToBounds(Rect rect, Rect bounds)
+    {
+        var left = Math.Max(rect.X, bounds.X);
+        var top = Math.Max(rect.Y, bounds.Y);
+        var right = Math.Min(rect.Right, bounds.Right);
+        var bottom = Math.Min(rect.Bottom, bounds.Bottom);
+
+        return right <= left || bottom <= top
+            ? new Rect(0, 0, 0, 0)
+            : new Rect(left, top, right - left, bottom - top);
     }
 
     private Rect GetVisibleRect(Rect fallback)

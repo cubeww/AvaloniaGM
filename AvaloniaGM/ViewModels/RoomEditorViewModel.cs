@@ -24,6 +24,9 @@ public partial class RoomEditorViewModel : ObservableObject
     private readonly List<RoomTile> _orderedTiles = [];
     private int _nextInstanceId;
     private int _nextTileId;
+    private bool _isSynchronizingSelectedInstanceEditor;
+    private bool _isSynchronizingSelectedTileEditor;
+    private RoomInstanceCodeDocumentViewModel? _selectedInstanceCodeDocument;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanvasWidth))]
@@ -103,6 +106,68 @@ public partial class RoomEditorViewModel : ObservableObject
     [ObservableProperty]
     private bool deleteUnderlyingTiles;
 
+    [ObservableProperty]
+    private bool enableViews;
+
+    [ObservableProperty]
+    private bool viewClearScreen;
+
+    [ObservableProperty]
+    private bool clearDisplayBuffer;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSelectedInstance))]
+    [NotifyPropertyChangedFor(nameof(SelectedInstanceObjectName))]
+    [NotifyPropertyChangedFor(nameof(SelectedInstanceCodeDocument))]
+    private RoomInstance? selectedInstance;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSelectedTile))]
+    [NotifyPropertyChangedFor(nameof(SelectedTileBackgroundName))]
+    private RoomTile? selectedTile;
+
+    [ObservableProperty]
+    private int selectedInstanceX;
+
+    [ObservableProperty]
+    private int selectedInstanceY;
+
+    [ObservableProperty]
+    private double selectedInstanceScaleX = 1.0;
+
+    [ObservableProperty]
+    private double selectedInstanceScaleY = 1.0;
+
+    [ObservableProperty]
+    private double selectedInstanceRotation;
+
+    [ObservableProperty]
+    private int selectedTileX;
+
+    [ObservableProperty]
+    private int selectedTileY;
+
+    [ObservableProperty]
+    private int selectedTileWidth = 16;
+
+    [ObservableProperty]
+    private int selectedTileHeight = 16;
+
+    [ObservableProperty]
+    private int selectedTileSourceX;
+
+    [ObservableProperty]
+    private int selectedTileSourceY;
+
+    [ObservableProperty]
+    private double selectedTileScaleX = 1.0;
+
+    [ObservableProperty]
+    private double selectedTileScaleY = 1.0;
+
+    [ObservableProperty]
+    private int selectedTileDepth = 1000000;
+
     public string Name => _room.Name;
 
     public double CanvasWidth => Math.Max(1, Width);
@@ -115,7 +180,17 @@ public partial class RoomEditorViewModel : ObservableObject
 
     public ObservableCollection<ResourceReferenceOption<Background>> BackgroundOptions { get; } = new();
 
+    public ObservableCollection<ResourceReferenceOption<Background>> RoomBackgroundOptions { get; } = new();
+
+    public ObservableCollection<ResourceReferenceOption<GameObject>> ViewObjectOptions { get; } = new();
+
+    public ObservableCollection<RoomBackgroundSlotViewModel> RoomBackgroundSlots { get; } = new();
+
+    public ObservableCollection<RoomViewSlotViewModel> RoomViewSlots { get; } = new();
+
     public IReadOnlyList<RoomBackground> BackgroundLayers => _room.Backgrounds;
+
+    public IReadOnlyList<RoomView> ViewLayers => _room.Views;
 
     public IReadOnlyList<RoomInstance> OrderedInstances => _orderedInstances;
 
@@ -133,9 +208,19 @@ public partial class RoomEditorViewModel : ObservableObject
 
     public bool HasSelectedBackground => SelectedBackgroundOption?.Resource is not null;
 
+    public bool HasSelectedInstance => SelectedInstance is not null;
+
+    public bool HasSelectedTile => SelectedTile is not null;
+
     public Bitmap? SelectedBackgroundBitmap => SelectedBackgroundOption?.Resource?.Bitmap;
 
     public string SelectedBackgroundDisplayName => SelectedBackgroundOption?.DisplayName ?? "<none>";
+
+    public string SelectedInstanceObjectName => SelectedInstance?.Object?.Name ?? "<undefined>";
+
+    public string SelectedTileBackgroundName => SelectedTile?.Background?.Name ?? "<undefined>";
+
+    public IGmlCodeDocument? SelectedInstanceCodeDocument => _selectedInstanceCodeDocument;
 
     public string PlacementHint => ActiveLayer == RoomEditLayer.Instances
         ? "Left click to place an instance. Right click to remove the topmost instance."
@@ -164,6 +249,9 @@ public partial class RoomEditorViewModel : ObservableObject
         showBackgrounds = room.MakerSettings.ShowBackgrounds;
         deleteUnderlyingObj = room.MakerSettings.DeleteUnderlyingObj;
         deleteUnderlyingTiles = room.MakerSettings.DeleteUnderlyingTiles;
+        enableViews = room.EnableViews;
+        viewClearScreen = room.ViewClearScreen;
+        clearDisplayBuffer = room.ClearDisplayBuffer;
 
         if (!_room.MakerSettings.ShowObjects && !_room.MakerSettings.ShowTiles && !_room.MakerSettings.ShowBackgrounds)
         {
@@ -285,6 +373,16 @@ public partial class RoomEditorViewModel : ObservableObject
 
     partial void OnDeleteUnderlyingTilesChanged(bool value) => _room.MakerSettings.DeleteUnderlyingTiles = value;
 
+    partial void OnEnableViewsChanged(bool value)
+    {
+        _room.EnableViews = value;
+        InvalidateCanvas();
+    }
+
+    partial void OnViewClearScreenChanged(bool value) => _room.ViewClearScreen = value;
+
+    partial void OnClearDisplayBufferChanged(bool value) => _room.ClearDisplayBuffer = value;
+
     partial void OnActiveLayerChanged(RoomEditLayer value)
     {
         OnPropertyChanged(nameof(IsEditingInstances));
@@ -357,6 +455,221 @@ public partial class RoomEditorViewModel : ObservableObject
     }
 
     partial void OnTileDepthChanged(int value) => InvalidateCanvas();
+
+    partial void OnSelectedInstanceChanged(RoomInstance? value)
+    {
+        _selectedInstanceCodeDocument = value is null ? null : new RoomInstanceCodeDocumentViewModel(value);
+        _isSynchronizingSelectedInstanceEditor = true;
+        SelectedInstanceX = value?.X ?? 0;
+        SelectedInstanceY = value?.Y ?? 0;
+        SelectedInstanceScaleX = value?.ScaleX ?? 1.0;
+        SelectedInstanceScaleY = value?.ScaleY ?? 1.0;
+        SelectedInstanceRotation = value?.Rotation ?? 0.0;
+        _isSynchronizingSelectedInstanceEditor = false;
+        OnPropertyChanged(nameof(SelectedInstanceCodeDocument));
+        InvalidateCanvas();
+    }
+
+    partial void OnSelectedTileChanged(RoomTile? value)
+    {
+        _isSynchronizingSelectedTileEditor = true;
+        SelectedTileX = value?.X ?? 0;
+        SelectedTileY = value?.Y ?? 0;
+        SelectedTileWidth = value?.Width ?? 16;
+        SelectedTileHeight = value?.Height ?? 16;
+        SelectedTileSourceX = value?.SourceX ?? 0;
+        SelectedTileSourceY = value?.SourceY ?? 0;
+        SelectedTileScaleX = value?.ScaleX ?? 1.0;
+        SelectedTileScaleY = value?.ScaleY ?? 1.0;
+        SelectedTileDepth = value?.Depth ?? 1000000;
+        _isSynchronizingSelectedTileEditor = false;
+        InvalidateCanvas();
+    }
+
+    partial void OnSelectedInstanceXChanged(int value)
+    {
+        if (_isSynchronizingSelectedInstanceEditor || SelectedInstance is null)
+        {
+            return;
+        }
+
+        SelectedInstance.X = value;
+        RebuildRenderCaches();
+        InvalidateCanvas();
+    }
+
+    partial void OnSelectedInstanceYChanged(int value)
+    {
+        if (_isSynchronizingSelectedInstanceEditor || SelectedInstance is null)
+        {
+            return;
+        }
+
+        SelectedInstance.Y = value;
+        RebuildRenderCaches();
+        InvalidateCanvas();
+    }
+
+    partial void OnSelectedInstanceScaleXChanged(double value)
+    {
+        if (_isSynchronizingSelectedInstanceEditor || SelectedInstance is null)
+        {
+            return;
+        }
+
+        SelectedInstance.ScaleX = value;
+        RebuildRenderCaches();
+        InvalidateCanvas();
+    }
+
+    partial void OnSelectedInstanceScaleYChanged(double value)
+    {
+        if (_isSynchronizingSelectedInstanceEditor || SelectedInstance is null)
+        {
+            return;
+        }
+
+        SelectedInstance.ScaleY = value;
+        RebuildRenderCaches();
+        InvalidateCanvas();
+    }
+
+    partial void OnSelectedInstanceRotationChanged(double value)
+    {
+        if (_isSynchronizingSelectedInstanceEditor || SelectedInstance is null)
+        {
+            return;
+        }
+
+        SelectedInstance.Rotation = value;
+        InvalidateCanvas();
+    }
+
+    partial void OnSelectedTileXChanged(int value)
+    {
+        if (_isSynchronizingSelectedTileEditor || SelectedTile is null)
+        {
+            return;
+        }
+
+        SelectedTile.X = value;
+        RebuildRenderCaches();
+        InvalidateCanvas();
+    }
+
+    partial void OnSelectedTileYChanged(int value)
+    {
+        if (_isSynchronizingSelectedTileEditor || SelectedTile is null)
+        {
+            return;
+        }
+
+        SelectedTile.Y = value;
+        RebuildRenderCaches();
+        InvalidateCanvas();
+    }
+
+    partial void OnSelectedTileWidthChanged(int value)
+    {
+        if (value <= 0)
+        {
+            SelectedTileWidth = 1;
+            return;
+        }
+
+        if (_isSynchronizingSelectedTileEditor || SelectedTile is null)
+        {
+            return;
+        }
+
+        SelectedTile.Width = value;
+        InvalidateCanvas();
+    }
+
+    partial void OnSelectedTileHeightChanged(int value)
+    {
+        if (value <= 0)
+        {
+            SelectedTileHeight = 1;
+            return;
+        }
+
+        if (_isSynchronizingSelectedTileEditor || SelectedTile is null)
+        {
+            return;
+        }
+
+        SelectedTile.Height = value;
+        InvalidateCanvas();
+    }
+
+    partial void OnSelectedTileSourceXChanged(int value)
+    {
+        if (value < 0)
+        {
+            SelectedTileSourceX = 0;
+            return;
+        }
+
+        if (_isSynchronizingSelectedTileEditor || SelectedTile is null)
+        {
+            return;
+        }
+
+        SelectedTile.SourceX = value;
+        InvalidateCanvas();
+    }
+
+    partial void OnSelectedTileSourceYChanged(int value)
+    {
+        if (value < 0)
+        {
+            SelectedTileSourceY = 0;
+            return;
+        }
+
+        if (_isSynchronizingSelectedTileEditor || SelectedTile is null)
+        {
+            return;
+        }
+
+        SelectedTile.SourceY = value;
+        InvalidateCanvas();
+    }
+
+    partial void OnSelectedTileScaleXChanged(double value)
+    {
+        if (_isSynchronizingSelectedTileEditor || SelectedTile is null)
+        {
+            return;
+        }
+
+        SelectedTile.ScaleX = value;
+        InvalidateCanvas();
+    }
+
+    partial void OnSelectedTileScaleYChanged(double value)
+    {
+        if (_isSynchronizingSelectedTileEditor || SelectedTile is null)
+        {
+            return;
+        }
+
+        SelectedTile.ScaleY = value;
+        InvalidateCanvas();
+    }
+
+    partial void OnSelectedTileDepthChanged(int value)
+    {
+        if (_isSynchronizingSelectedTileEditor || SelectedTile is null)
+        {
+            return;
+        }
+
+        SelectedTile.Depth = value;
+        RebuildRenderCaches();
+        InvalidateCanvas();
+    }
 
     public bool TrySnapToGrid(Point roomPoint, out int snappedX, out int snappedY)
     {
@@ -463,6 +776,16 @@ public partial class RoomEditorViewModel : ObservableObject
         InvalidateCanvas();
     }
 
+    public bool TrySelectTopmostAt(Point roomPoint)
+    {
+        return ActiveLayer switch
+        {
+            RoomEditLayer.Instances => TrySelectTopmostInstance(roomPoint),
+            RoomEditLayer.Tiles => TrySelectTopmostTile(roomPoint),
+            _ => false
+        };
+    }
+
     public static Bitmap? GetObjectPreviewBitmap(GameObject? gameObject)
     {
         return gameObject?.Sprite?.Frames
@@ -516,6 +839,32 @@ public partial class RoomEditorViewModel : ObservableObject
             BackgroundOptions.Add(new ResourceReferenceOption<Background>(background.Name, background));
         }
 
+        RoomBackgroundOptions.Clear();
+        RoomBackgroundOptions.Add(new ResourceReferenceOption<Background>("<none>", null));
+        foreach (var background in project.Backgrounds.OrderBy(static background => background.Name, StringComparer.OrdinalIgnoreCase))
+        {
+            RoomBackgroundOptions.Add(new ResourceReferenceOption<Background>(background.Name, background));
+        }
+
+        ViewObjectOptions.Clear();
+        ViewObjectOptions.Add(new ResourceReferenceOption<GameObject>("<none>", null));
+        foreach (var gameObject in project.Objects.OrderBy(static objectItem => objectItem.Name, StringComparer.OrdinalIgnoreCase))
+        {
+            ViewObjectOptions.Add(new ResourceReferenceOption<GameObject>(gameObject.Name, gameObject));
+        }
+
+        RoomBackgroundSlots.Clear();
+        for (var index = 0; index < _room.Backgrounds.Count; index++)
+        {
+            RoomBackgroundSlots.Add(new RoomBackgroundSlotViewModel(index, _room.Backgrounds[index], RoomBackgroundOptions, InvalidateCanvas));
+        }
+
+        RoomViewSlots.Clear();
+        for (var index = 0; index < _room.Views.Count; index++)
+        {
+            RoomViewSlots.Add(new RoomViewSlotViewModel(index, _room.Views[index], ViewObjectOptions, InvalidateCanvas));
+        }
+
         SelectedObjectOption = ObjectOptions.FirstOrDefault(option => option.Resource is not null) ?? ObjectOptions.FirstOrDefault();
         SelectedBackgroundOption = BackgroundOptions.FirstOrDefault(option => option.Resource?.Bitmap is not null) ?? BackgroundOptions.FirstOrDefault();
 
@@ -546,6 +895,14 @@ public partial class RoomEditorViewModel : ObservableObject
         return Math.Max(1, background.IsTileset ? background.TileHeight : background.Height);
     }
 
+    internal static ResourceReferenceOption<TResource>? FindOption<TResource>(
+        IEnumerable<ResourceReferenceOption<TResource>> options,
+        TResource? resource) where TResource : Resource
+    {
+        return options.FirstOrDefault(option => ReferenceEquals(option.Resource, resource))
+            ?? options.FirstOrDefault(option => option.Resource is null);
+    }
+
     private void PlaceInstance(int x, int y)
     {
         SyncSelectedObjectOptionWithTreeSelection();
@@ -572,6 +929,7 @@ public partial class RoomEditorViewModel : ObservableObject
 
         _room.Instances.Add(roomInstance);
         RebuildRenderCaches();
+        SelectedInstance = roomInstance;
         NotifySceneCountsChanged();
         InvalidateCanvas();
     }
@@ -623,6 +981,7 @@ public partial class RoomEditorViewModel : ObservableObject
 
         _room.Tiles.Add(roomTile);
         RebuildRenderCaches();
+        SelectedTile = roomTile;
         NotifySceneCountsChanged();
         InvalidateCanvas();
     }
@@ -639,6 +998,10 @@ public partial class RoomEditorViewModel : ObservableObject
 
             _room.Instances.Remove(roomInstance);
             RebuildRenderCaches();
+            if (ReferenceEquals(SelectedInstance, roomInstance))
+            {
+                SelectedInstance = null;
+            }
             NotifySceneCountsChanged();
             InvalidateCanvas();
             return;
@@ -657,6 +1020,10 @@ public partial class RoomEditorViewModel : ObservableObject
 
             _room.Tiles.Remove(roomTile);
             RebuildRenderCaches();
+            if (ReferenceEquals(SelectedTile, roomTile))
+            {
+                SelectedTile = null;
+            }
             NotifySceneCountsChanged();
             InvalidateCanvas();
             return;
@@ -700,6 +1067,40 @@ public partial class RoomEditorViewModel : ObservableObject
             .ThenBy(static tile => tile.Id));
     }
 
+    private bool TrySelectTopmostInstance(Point roomPoint)
+    {
+        for (var index = _orderedInstances.Count - 1; index >= 0; index--)
+        {
+            var roomInstance = _orderedInstances[index];
+            if (!GetInstanceBounds(roomInstance).Contains(roomPoint))
+            {
+                continue;
+            }
+
+            SelectedInstance = roomInstance;
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool TrySelectTopmostTile(Point roomPoint)
+    {
+        for (var index = _orderedTiles.Count - 1; index >= 0; index--)
+        {
+            var roomTile = _orderedTiles[index];
+            if (!GetTileBounds(roomTile).Contains(roomPoint))
+            {
+                continue;
+            }
+
+            SelectedTile = roomTile;
+            return true;
+        }
+
+        return false;
+    }
+
     private void NotifySceneCountsChanged()
     {
         OnPropertyChanged(nameof(InstanceCount));
@@ -709,5 +1110,330 @@ public partial class RoomEditorViewModel : ObservableObject
     private void InvalidateCanvas()
     {
         CanvasChanged?.Invoke(this, EventArgs.Empty);
+    }
+}
+
+public partial class RoomInstanceCodeDocumentViewModel : ObservableObject, IGmlCodeDocument
+{
+    private readonly RoomInstance _roomInstance;
+
+    [ObservableProperty]
+    private string sourceCode;
+
+    public RoomInstanceCodeDocumentViewModel(RoomInstance roomInstance)
+    {
+        _roomInstance = roomInstance;
+        sourceCode = roomInstance.Code;
+    }
+
+    partial void OnSourceCodeChanged(string value)
+    {
+        _roomInstance.Code = value;
+    }
+}
+
+public partial class RoomBackgroundSlotViewModel : ObservableObject
+{
+    private readonly RoomBackground _roomBackground;
+    private readonly Action _invalidateCanvas;
+
+    [ObservableProperty]
+    private ResourceReferenceOption<Background>? backgroundOption;
+
+    [ObservableProperty]
+    private bool visible;
+
+    [ObservableProperty]
+    private bool foreground;
+
+    [ObservableProperty]
+    private int x;
+
+    [ObservableProperty]
+    private int y;
+
+    [ObservableProperty]
+    private bool hTiled;
+
+    [ObservableProperty]
+    private bool vTiled;
+
+    [ObservableProperty]
+    private int hSpeed;
+
+    [ObservableProperty]
+    private int vSpeed;
+
+    [ObservableProperty]
+    private bool stretch;
+
+    public int Index { get; }
+
+    public string Header => $"Background {Index}";
+
+    public ObservableCollection<ResourceReferenceOption<Background>> BackgroundOptions { get; }
+
+    public RoomBackgroundSlotViewModel(
+        int index,
+        RoomBackground roomBackground,
+        ObservableCollection<ResourceReferenceOption<Background>> backgroundOptions,
+        Action invalidateCanvas)
+    {
+        Index = index;
+        _roomBackground = roomBackground;
+        BackgroundOptions = backgroundOptions;
+        _invalidateCanvas = invalidateCanvas;
+
+        backgroundOption = RoomEditorViewModel.FindOption(backgroundOptions, roomBackground.Background);
+        visible = roomBackground.Visible;
+        foreground = roomBackground.Foreground;
+        x = roomBackground.X;
+        y = roomBackground.Y;
+        hTiled = roomBackground.HTiled;
+        vTiled = roomBackground.VTiled;
+        hSpeed = roomBackground.HSpeed;
+        vSpeed = roomBackground.VSpeed;
+        stretch = roomBackground.Stretch;
+    }
+
+    partial void OnBackgroundOptionChanged(ResourceReferenceOption<Background>? value)
+    {
+        _roomBackground.Background = value?.Resource;
+        _invalidateCanvas();
+    }
+
+    partial void OnVisibleChanged(bool value)
+    {
+        _roomBackground.Visible = value;
+        _invalidateCanvas();
+    }
+
+    partial void OnForegroundChanged(bool value)
+    {
+        _roomBackground.Foreground = value;
+        _invalidateCanvas();
+    }
+
+    partial void OnXChanged(int value)
+    {
+        _roomBackground.X = value;
+        _invalidateCanvas();
+    }
+
+    partial void OnYChanged(int value)
+    {
+        _roomBackground.Y = value;
+        _invalidateCanvas();
+    }
+
+    partial void OnHTiledChanged(bool value)
+    {
+        _roomBackground.HTiled = value;
+        _invalidateCanvas();
+    }
+
+    partial void OnVTiledChanged(bool value)
+    {
+        _roomBackground.VTiled = value;
+        _invalidateCanvas();
+    }
+
+    partial void OnHSpeedChanged(int value) => _roomBackground.HSpeed = value;
+
+    partial void OnVSpeedChanged(int value) => _roomBackground.VSpeed = value;
+
+    partial void OnStretchChanged(bool value)
+    {
+        _roomBackground.Stretch = value;
+        _invalidateCanvas();
+    }
+}
+
+public partial class RoomViewSlotViewModel : ObservableObject
+{
+    private readonly RoomView _roomView;
+    private readonly Action _invalidateCanvas;
+
+    [ObservableProperty]
+    private ResourceReferenceOption<GameObject>? followObjectOption;
+
+    [ObservableProperty]
+    private bool visible;
+
+    [ObservableProperty]
+    private int xView;
+
+    [ObservableProperty]
+    private int yView;
+
+    [ObservableProperty]
+    private int wView;
+
+    [ObservableProperty]
+    private int hView;
+
+    [ObservableProperty]
+    private int xPort;
+
+    [ObservableProperty]
+    private int yPort;
+
+    [ObservableProperty]
+    private int wPort;
+
+    [ObservableProperty]
+    private int hPort;
+
+    [ObservableProperty]
+    private int hBorder;
+
+    [ObservableProperty]
+    private int vBorder;
+
+    [ObservableProperty]
+    private int hSpeed;
+
+    [ObservableProperty]
+    private int vSpeed;
+
+    public int Index { get; }
+
+    public string Header => $"View {Index}";
+
+    public ObservableCollection<ResourceReferenceOption<GameObject>> FollowObjectOptions { get; }
+
+    public RoomViewSlotViewModel(
+        int index,
+        RoomView roomView,
+        ObservableCollection<ResourceReferenceOption<GameObject>> followObjectOptions,
+        Action invalidateCanvas)
+    {
+        Index = index;
+        _roomView = roomView;
+        FollowObjectOptions = followObjectOptions;
+        _invalidateCanvas = invalidateCanvas;
+
+        followObjectOption = RoomEditorViewModel.FindOption(followObjectOptions, roomView.FollowObject);
+        visible = roomView.Visible;
+        xView = roomView.XView;
+        yView = roomView.YView;
+        wView = roomView.WView;
+        hView = roomView.HView;
+        xPort = roomView.XPort;
+        yPort = roomView.YPort;
+        wPort = roomView.WPort;
+        hPort = roomView.HPort;
+        hBorder = roomView.HBorder;
+        vBorder = roomView.VBorder;
+        hSpeed = roomView.HSpeed;
+        vSpeed = roomView.VSpeed;
+    }
+
+    partial void OnFollowObjectOptionChanged(ResourceReferenceOption<GameObject>? value)
+    {
+        _roomView.FollowObject = value?.Resource;
+        _invalidateCanvas();
+    }
+
+    partial void OnVisibleChanged(bool value)
+    {
+        _roomView.Visible = value;
+        _invalidateCanvas();
+    }
+
+    partial void OnXViewChanged(int value)
+    {
+        _roomView.XView = value;
+        _invalidateCanvas();
+    }
+
+    partial void OnYViewChanged(int value)
+    {
+        _roomView.YView = value;
+        _invalidateCanvas();
+    }
+
+    partial void OnWViewChanged(int value)
+    {
+        if (value <= 0)
+        {
+            WView = 1;
+            return;
+        }
+
+        _roomView.WView = value;
+        _invalidateCanvas();
+    }
+
+    partial void OnHViewChanged(int value)
+    {
+        if (value <= 0)
+        {
+            HView = 1;
+            return;
+        }
+
+        _roomView.HView = value;
+        _invalidateCanvas();
+    }
+
+    partial void OnXPortChanged(int value)
+    {
+        _roomView.XPort = value;
+        _invalidateCanvas();
+    }
+
+    partial void OnYPortChanged(int value)
+    {
+        _roomView.YPort = value;
+        _invalidateCanvas();
+    }
+
+    partial void OnWPortChanged(int value)
+    {
+        if (value <= 0)
+        {
+            WPort = 1;
+            return;
+        }
+
+        _roomView.WPort = value;
+        _invalidateCanvas();
+    }
+
+    partial void OnHPortChanged(int value)
+    {
+        if (value <= 0)
+        {
+            HPort = 1;
+            return;
+        }
+
+        _roomView.HPort = value;
+        _invalidateCanvas();
+    }
+
+    partial void OnHBorderChanged(int value)
+    {
+        _roomView.HBorder = value;
+        _invalidateCanvas();
+    }
+
+    partial void OnVBorderChanged(int value)
+    {
+        _roomView.VBorder = value;
+        _invalidateCanvas();
+    }
+
+    partial void OnHSpeedChanged(int value)
+    {
+        _roomView.HSpeed = value;
+        _invalidateCanvas();
+    }
+
+    partial void OnVSpeedChanged(int value)
+    {
+        _roomView.VSpeed = value;
+        _invalidateCanvas();
     }
 }
