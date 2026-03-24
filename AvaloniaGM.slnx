@@ -1,4 +1,8 @@
 <Solution>
   <Project Path="AvaloniaGM/AvaloniaGM.csproj" />
+  <Folder Name="/Lib/">
+    <Project Path="UndertaleModTool/Underanalyzer/Underanalyzer/Underanalyzer.csproj" />
+    <Project Path="UndertaleModTool/UndertaleModLib/UndertaleModLib.csproj" />
+  </Folder>
   <Project Path="AvaloniaGM.Verifier/AvaloniaGM.Verifier.csproj" />
 </Solution>
