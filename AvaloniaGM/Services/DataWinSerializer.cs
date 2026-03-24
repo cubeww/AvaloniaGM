@@ -1191,13 +1191,7 @@ public class DataWinSerializer
 
     private static string GetExternalSoundFileName(GM.Sound sound)
     {
-        var originalName = Path.GetFileName(sound.OriginalName ?? string.Empty);
-        if (!string.IsNullOrWhiteSpace(originalName))
-        {
-            return originalName;
-        }
-
-        return sound.Name + NormalizeSoundExtension(sound.Extension, sound.OriginalName);
+        return sound.Name + ".ogg";
     }
 
     private static UndertaleSound.AudioEntryFlags BuildSoundFlags(GM.Sound sound)
